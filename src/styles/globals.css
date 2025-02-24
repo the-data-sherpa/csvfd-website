@@ -1,0 +1,19 @@
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .print\:block {
+    display: block !important;
+  }
+  
+  .print\:hidden {
+    display: none !important;
+  }
+} 

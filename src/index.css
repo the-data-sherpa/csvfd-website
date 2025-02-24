@@ -324,3 +324,35 @@
     @apply w-full;
   }
 }
+
+@media print {
+  /* Hide everything initially */
+  * {
+    display: none;
+  }
+
+  /* Only show the print layout */
+  #print-layout {
+    display: block !important;
+    margin: 0;
+    padding: 0.5in;
+    background: white;
+    color: black;
+  }
+
+  /* Basic print settings */
+  @page {
+    size: letter portrait;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  .page-break-after-avoid {
+    page-break-inside: avoid;
+  }
+}

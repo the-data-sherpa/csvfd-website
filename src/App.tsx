@@ -16,6 +16,7 @@ import { Page } from './types/database';
 import { WeatherInfo } from './components/WeatherInfo';
 import { AnnouncementEditor } from './pages/AnnouncementEditor';
 import { AnnouncementsDisplay } from './components/AnnouncementsDisplay';
+import { ApplicationForm } from './pages/ApplicationForm';
 
 function Navigation() {
   const { user } = useAuth();
@@ -325,6 +326,7 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route path="/apply" element={<ApplicationForm />} />
           </Routes>
 
           {/* Footer */}
@@ -368,6 +370,8 @@ function App() {
 }
 
 function HomePage() {
+  const navigate = useNavigate();
+
   return (
     <>
       {/* Hero Section */}
@@ -385,11 +389,8 @@ function HomePage() {
             <h2 className="text-5xl font-bold mb-6">Serving our community</h2>
             <p className="text-xl mb-8">Fire Protection • Medical First Response • Community Service</p>
             <div className="flex space-x-4">
-              <button className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition">
+              <button onClick={() => navigate('/apply')} className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition">
                 Join Our Team
-              </button>
-              <button className="bg-white text-red-600 px-8 py-3 rounded-lg hover:bg-gray-100 transition">
-                Learn More
               </button>
             </div>
           </div>
