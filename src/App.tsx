@@ -14,6 +14,8 @@ import { supabase } from './lib/supabase';
 import { useState, useEffect } from 'react';
 import { Page } from './types/database';
 import { WeatherInfo } from './components/WeatherInfo';
+import { AnnouncementEditor } from './pages/AnnouncementEditor';
+import { AnnouncementsDisplay } from './components/AnnouncementsDisplay';
 
 function Navigation() {
   const { user } = useAuth();
@@ -300,6 +302,22 @@ function App() {
               }
             />
             <Route
+              path="/members/cms/announcements/new"
+              element={
+                <PrivateRoute>
+                  <AnnouncementEditor />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/members/cms/announcements/edit/:id"
+              element={
+                <PrivateRoute>
+                  <AnnouncementEditor />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/members/admin"
               element={
                 <PrivateRoute>
@@ -321,15 +339,6 @@ function App() {
                   <p>info@coolspringsvfd.org</p>
                 </div>
                 <div>
-                  <h4 className="text-xl font-semibold mb-4">Quick Links</h4>
-                  <ul className="space-y-2">
-                    <li><Link to="/our-department" className="hover:text-red-400 transition">Our Department</Link></li>
-                    <li><Link to="/services" className="hover:text-red-400 transition">Services</Link></li>
-                    <li><Link to="/memorials" className="hover:text-red-400 transition">Memorials</Link></li>
-                    <li><Link to="/cool-spring" className="hover:text-red-400 transition">Cool Spring</Link></li>
-                  </ul>
-                </div>
-                <div>
                   <h4 className="text-xl font-semibold mb-4">Resources</h4>
                   <ul className="space-y-2">
                     <li><a href="#" className="hover:text-red-400 transition">Fire Safety Tips</a></li>
@@ -341,14 +350,8 @@ function App() {
                 <div>
                   <h4 className="text-xl font-semibold mb-4">Follow Us</h4>
                   <div className="flex space-x-4">
-                    <a href="#" className="hover:text-red-400 transition">
+                    <a href="https://www.facebook.com/coolspringsvfd" className="hover:text-red-400 transition">
                       <Facebook className="w-6 h-6" />
-                    </a>
-                    <a href="#" className="hover:text-red-400 transition">
-                      <Twitter className="w-6 h-6" />
-                    </a>
-                    <a href="#" className="hover:text-red-400 transition">
-                      <Instagram className="w-6 h-6" />
                     </a>
                   </div>
                 </div>
@@ -460,18 +463,9 @@ function HomePage() {
               </div>
             </div>
             <div className="bg-white rounded-lg overflow-hidden shadow-md">
-              <img 
-                src="https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&w=800&q=80" 
-                alt="Safety Tips" 
-                className="w-full h-48 object-cover"
-              />
               <div className="p-6">
-                <div className="flex items-center text-sm text-gray-500 mb-2">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  March 25, 2024
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Spring Safety Tips</h3>
-                <p className="text-gray-600">Essential fire safety tips for the spring season.</p>
+                <h3 className="text-xl font-semibold mb-4">Community Announcements</h3>
+                <AnnouncementsDisplay />
               </div>
             </div>
           </div>
