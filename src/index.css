@@ -1,0 +1,326 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Common styles for both editor and preview */
+.preview-content,
+.document-editor__editable {
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: normal;
+
+  h1 {
+    @apply text-4xl font-bold mb-6;
+  }
+
+  h2 {
+    @apply text-3xl font-bold mb-5;
+  }
+
+  h3 {
+    @apply text-2xl font-bold mb-4;
+  }
+
+  p {
+    @apply mb-4 text-base leading-relaxed;
+    text-align: inherit;
+    line-height: 1.75;
+    margin: 0 0 1em;
+    white-space: pre-wrap !important;
+    padding: 0 !important;
+    min-height: 1.75em !important;
+    display: block !important;
+  }
+
+  /* Handle line breaks */
+  br {
+    content: '';
+    display: block;
+    margin: 0 0 1em;
+    line-height: 1.75;
+  }
+
+  p:empty::after {
+    content: '\00a0';
+    white-space: pre;
+  }
+
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 1rem 0;
+  }
+
+  table {
+    @apply w-full border-collapse mb-4;
+    
+    td, th {
+      @apply border border-gray-300 p-2;
+    }
+  }
+}
+
+/* Image inline styles */
+.image-inline {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: flex-start;
+  vertical-align: text-bottom;
+}
+
+/* Preview content image alignment styles */
+.preview-content figure.image.image-style-align-left {
+  display: table;
+  clear: both;
+  float: left !important;
+  margin-right: 1.5em !important;
+  max-width: 50%;
+  margin-bottom: 0.5em !important;
+}
+
+.preview-content figure.image.image-style-align-right {
+  display: table;
+  clear: both;
+  float: right !important;
+  margin-left: 1.5em !important;
+  max-width: 50%;
+  margin-bottom: 0.5em !important;
+}
+
+.preview-content figure.image.image-style-align-center {
+  display: table;
+  clear: both;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  max-width: 100%;
+  text-align: center !important;
+}
+
+.preview-content figure.image {
+  display: table;
+  clear: both;
+  text-align: center;
+  margin: 0.5em auto;
+  figcaption {
+    display: table-caption;
+    caption-side: bottom;
+    text-align: center;
+    color: #333;
+    background-color: #f8f9fa;
+    padding: 0.6em;
+    font-size: 0.8em;
+  }
+}
+
+.preview-content figure.image img {
+  display: inline-block;
+  vertical-align: bottom;
+  max-width: 100%;
+  height: auto !important;
+  margin: 0 !important;
+}
+
+/* Preserve aspect ratio for images */
+.preview-content img[style*="aspect-ratio"] {
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Ensure proper text wrapping around images */
+.preview-content p {
+  overflow: hidden;
+}
+
+/* Preserve margin for paragraphs with indentation */
+.preview-content p[style*="margin-left"] {
+  margin-left: inherit !important;
+}
+
+/* Preview content styles */
+.preview-content [data-alignment="left"] {
+  text-align: left;
+}
+
+.preview-content [data-alignment="center"] {
+  text-align: center;
+}
+
+.preview-content [data-alignment="right"] {
+  text-align: right;
+}
+
+.preview-content [data-alignment="justify"] {
+  text-align: justify;
+}
+
+.preview-content h1,
+.preview-content h2,
+.preview-content h3,
+.preview-content h4,
+.preview-content h5,
+.preview-content h6,
+.preview-content p,
+.preview-content div {
+  text-align: inherit;
+}
+
+/* Preserve whitespace and line breaks */
+.preview-content p,
+.document-editor__editable p {
+  white-space: normal;
+}
+
+/* Handle HTML entities */
+.preview-content [data-entity],
+.document-editor__editable [data-entity] {
+  white-space: normal;
+}
+
+/* Consistent list styling */
+.preview-content ul,
+.preview-content ol,
+.document-editor__editable ul,
+.document-editor__editable ol {
+  @apply pl-5 mb-4;
+}
+
+.preview-content li,
+.document-editor__editable li {
+  @apply mb-2;
+}
+
+/* Consistent text styling */
+.preview-content i,
+.document-editor__editable i {
+  font-style: italic;
+}
+
+.preview-content b,
+.preview-content strong,
+.document-editor__editable b,
+.document-editor__editable strong {
+  font-weight: bold;
+}
+
+.document-editor {
+  @apply border border-gray-300 rounded-lg overflow-hidden;
+}
+
+.document-editor__toolbar {
+  @apply sticky top-0 z-10 bg-white border-b border-gray-300;
+}
+
+.document-editor__toolbar .ck-toolbar {
+  @apply border-0 rounded-none bg-white p-2;
+}
+
+.document-editor__editable {
+  @apply p-6 bg-white text-gray-900;
+  min-height: 500px !important;
+  overflow-y: auto;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.document-editor__editable.ck-editor__editable {
+  @apply border-0 shadow-none bg-white;
+  min-height: 500px !important;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.document-editor__editable.ck-editor__editable.ck-focused {
+  @apply border-0 shadow-none bg-white;
+  min-height: 500px !important;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* CKEditor Overrides */
+.ck.ck-button {
+  @apply hover:bg-gray-100 transition-colors;
+}
+
+.ck.ck-dropdown__panel {
+  @apply border border-gray-200 shadow-lg rounded-md;
+}
+
+.ck.ck-list {
+  @apply rounded-md;
+}
+
+.ck.ck-list__item {
+  @apply hover:bg-gray-100;
+}
+
+.ck.ck-list__item .ck-button {
+  @apply hover:bg-transparent;
+}
+
+/* Fix toolbar button styles */
+.ck.ck-toolbar .ck-toolbar__items {
+  @apply flex flex-wrap gap-1;
+}
+
+.ck.ck-toolbar .ck-toolbar__separator {
+  @apply mx-2;
+}
+
+/* Improve dropdown styling */
+.ck.ck-dropdown .ck-dropdown__button {
+  @apply hover:bg-gray-100;
+}
+
+.ck.ck-dropdown .ck-dropdown__panel {
+  @apply mt-1;
+}
+
+/* Table styles */
+.ck-content .table {
+  @apply w-full border-collapse;
+}
+
+.ck-content .table table {
+  @apply border border-gray-300;
+}
+
+.ck-content .table table td,
+.ck-content .table table th {
+  @apply border border-gray-300 p-2;
+}
+
+/* Auth UI Styles */
+.auth-container {
+  @apply w-full;
+}
+
+.auth-button {
+  @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500;
+}
+
+.auth-label {
+  @apply block text-sm font-medium text-gray-700;
+}
+
+.auth-input {
+  @apply appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm;
+}
+
+.auth-message {
+  @apply mt-2 text-sm text-gray-600;
+}
+
+/* Facebook Container Styles */
+.fb-page-container {
+  @apply relative w-full overflow-hidden block text-center bg-white;
+  min-height: 500px;
+  
+  .fb-page {
+    @apply w-full;
+  }
+}

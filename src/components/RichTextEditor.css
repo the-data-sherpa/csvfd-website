@@ -1,0 +1,212 @@
+.document-editor {
+  @apply border border-gray-300 rounded-lg overflow-hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.document-editor__toolbar {
+  @apply sticky top-0 z-10 bg-white border-b border-gray-300;
+  flex: 0 0 auto;
+}
+
+.document-editor__toolbar .ck-toolbar {
+  @apply border-0 rounded-none bg-white p-2;
+}
+
+.document-editor__editable-container {
+  flex: 1;
+  min-height: 0; /* Critical for proper flex behavior */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-editor__editable {
+  @apply p-6 bg-white flex-1;
+  overflow-y: auto;
+  min-height: 500px !important;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  color: rgb(17, 24, 39);
+  white-space: normal !important;
+}
+
+.document-editor__editable.ck-editor__editable,
+.document-editor__editable.ck-editor__editable.ck-focused,
+.document-editor__editable.ck-editor__editable.ck-blurred {
+  @apply border-0 shadow-none bg-white;
+  min-height: 500px !important;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.75 !important;
+  color: rgb(17, 24, 39) !important;
+  white-space: normal;
+}
+
+/* Override CKEditor's default focus styles */
+.ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable),
+.ck.ck-editor__editable.ck-blurred:not(.ck-editor__nested-editable) {
+  border: none !important;
+  box-shadow: none !important;
+  background: white !important;
+}
+
+/* CKEditor Content Styles */
+.document-editor__editable h1 {
+  @apply text-4xl font-bold mb-6;
+  text-align: inherit;
+  line-height: 1.2;
+}
+
+.document-editor__editable h2 {
+  @apply text-3xl font-bold mb-5;
+  text-align: inherit;
+  line-height: 1.2;
+}
+
+.document-editor__editable h3 {
+  @apply text-2xl font-bold mb-4;
+  text-align: inherit;
+  line-height: 1.2;
+}
+
+.document-editor__editable h4 {
+  @apply text-xl font-bold mb-3;
+  text-align: inherit;
+  line-height: 1.2;
+}
+
+/* List styles */
+.document-editor__editable ul,
+.document-editor__editable ol {
+  @apply pl-5 mb-4;
+}
+
+.document-editor__editable li {
+  @apply mb-2;
+}
+
+/* Inline text styles */
+.document-editor__editable i {
+  font-style: italic;
+}
+
+.document-editor__editable b,
+.document-editor__editable strong {
+  font-weight: bold;
+}
+
+.document-editor__editable p {
+  @apply mb-4 text-base;
+  text-align: inherit;
+  line-height: 1.75 !important;
+  margin: 0 0 1em !important;
+  white-space: pre-wrap;
+  padding: 0;
+  min-height: 1.75em;
+  display: block;
+}
+
+/* Handle line breaks */
+.document-editor__editable br {
+  content: '';
+  display: block;
+  margin: 0 0 1em;
+  line-height: 1.75;
+}
+
+.document-editor__editable p:empty::after {
+  content: '\00a0';
+  white-space: pre;
+}
+
+.document-editor__editable p[style*="margin-left"] {
+  @apply pl-10;
+}
+
+/* Text alignment styles */
+.document-editor__editable [data-alignment="left"] {
+  text-align: left;
+}
+
+.document-editor__editable [data-alignment="center"] {
+  text-align: center;
+}
+
+.document-editor__editable [data-alignment="right"] {
+  text-align: right;
+}
+
+.document-editor__editable [data-alignment="justify"] {
+  text-align: justify;
+}
+
+.document-editor__editable img {
+  @apply max-w-full h-auto my-4;
+}
+
+.document-editor__editable img.image-style-align-left {
+  @apply float-left mr-4 mb-4;
+}
+
+.document-editor__editable img.image-style-align-right {
+  @apply float-right ml-4 mb-4;
+}
+
+.document-editor__editable img.image-style-align-center {
+  @apply mx-auto block;
+}
+
+/* Fix toolbar button styles */
+.ck.ck-toolbar .ck-toolbar__items {
+  @apply flex flex-wrap gap-1;
+}
+
+.ck.ck-toolbar .ck-toolbar__separator {
+  @apply mx-2;
+}
+
+/* Improve dropdown styling */
+.ck.ck-dropdown .ck-dropdown__button {
+  @apply hover:bg-gray-100;
+}
+
+.ck.ck-dropdown .ck-dropdown__panel {
+  @apply mt-1 border border-gray-200 shadow-lg rounded-md;
+}
+
+/* Table styles */
+.document-editor__editable .table {
+  @apply w-full border-collapse mb-4;
+}
+
+.document-editor__editable .table table {
+  @apply border border-gray-300;
+}
+
+.document-editor__editable .table table td,
+.document-editor__editable .table table th {
+  @apply border border-gray-300 p-2;
+}
+
+.document-editor__resize-handle {
+  height: 6px;
+  background-color: #f3f4f6;
+  border-top: 1px solid #e5e7eb;
+  cursor: row-resize;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transition: background-color 0.2s;
+}
+
+.document-editor__resize-handle:hover {
+  background-color: #e5e7eb;
+}
+
+.document-editor__resize-handle:active {
+  background-color: #d1d5db;
+}
