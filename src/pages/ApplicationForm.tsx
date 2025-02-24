@@ -93,11 +93,22 @@ const validatePersonalInfo = (values: Partial<ApplicationFormData>) => {
   
   // Required fields for personal information
   const requiredFields: (keyof ApplicationFormData)[] = [
-    // Temporarily commented out for testing
-    // 'lastName',
-    // 'firstName',
-    // 'dob',
-    // etc...
+    'lastName',
+    'firstName',
+    'dob',
+    'currentAddress',
+    'city',
+    'stateAddress',
+    'zip',
+    'yearsAtCurrentAddress',
+    'cellPhone',
+    'socialSecurity',
+    'driversLicenseNumber',
+    'gender',
+    'birthPlace',
+    'citizenship',
+    'education',
+    'maritalStatus'
   ];
 
   requiredFields.forEach((field) => {
@@ -106,20 +117,27 @@ const validatePersonalInfo = (values: Partial<ApplicationFormData>) => {
     }
   });
 
-  // Existing validations
+  // Validate SSN format
   if (values.socialSecurity && !values.socialSecurity.match(/^\d{3}-?\d{2}-?\d{4}$/)) {
     errors.socialSecurity = 'Please enter a valid SSN (XXX-XX-XXXX)';
   }
 
+  // Validate phone number format
   if (values.cellPhone && !values.cellPhone.match(/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/)) {
     errors.cellPhone = 'Please enter a valid phone number';
   }
 
+  // Validate age (must be at least 18)
   if (values.dob) {
     const age = new Date().getFullYear() - new Date(values.dob).getFullYear();
     if (age < 18) {
       errors.dob = 'Must be at least 18 years old';
     }
+  }
+
+  // Validate ZIP code format
+  if (values.zip && !values.zip.match(/^\d{5}(-\d{4})?$/)) {
+    errors.zip = 'Please enter a valid ZIP code';
   }
 
   return errors;

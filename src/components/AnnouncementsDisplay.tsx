@@ -18,31 +18,10 @@ export function AnnouncementsDisplay() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchAnnouncements() {
-      try {
-        const { data, error } = await supabase
-          .from('announcements')
-          .select('*')
-          .eq('published', true)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        const announcements = data?.map(a => ({
-          ...a,
-          user_email: a.created_by || 'Member'
-        })) || [];
-        setAnnouncements(announcements);
-      } catch (err) {
-        console.error('Error fetching announcements:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchAnnouncements();
 
     const subscription = supabase
-      .channel('announcements_display')
+      .channel('announcements_changes')
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
@@ -58,9 +37,31 @@ export function AnnouncementsDisplay() {
     };
   }, []);
 
+  async function fetchAnnouncements() {
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .eq('published', true)
+        .order('created_at', { ascending: false })
+        .limit(5);  // Limit to 5 most recent announcements
+
+      if (error) throw error;
+      const announcements = data?.map(a => ({
+        ...a,
+        user_email: a.created_by || 'Member'
+      })) || [];
+      setAnnouncements(announcements);
+    } catch (err) {
+      console.error('Error fetching announcements:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
+      <div className="flex justify-center py-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     );
@@ -68,9 +69,7 @@ export function AnnouncementsDisplay() {
 
   if (announcements.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
-        No announcements available
-      </div>
+      <p className="text-gray-500 text-center py-4">No announcements at this time</p>
     );
   }
 

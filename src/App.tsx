@@ -220,12 +220,11 @@ function Navigation() {
 }
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, role } = useAuth();
-  const requiresAdmin = window.location.pathname.startsWith('/members/admin');
-  const requiresWebmaster = window.location.pathname.startsWith('/members/cms');
+  const { user, loading } = useAuth();
+  const location = useLocation();
 
-  // Skip auth check in development or WebContainer
-  if (import.meta.env.DEV || window.location.hostname.includes('local-credentialless')) {
+  // Skip auth check in development
+  if (import.meta.env.DEV) {
     return <>{children}</>;
   }
 
@@ -238,15 +237,8 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/members/login" />;
-  }
-
-  if (requiresAdmin && role !== 'admin') {
-    return <Navigate to="/members" />;
-  }
-
-  if (requiresWebmaster && !['webmaster', 'admin'].includes(role || '')) {
-    return <Navigate to="/members" />;
+    // Redirect to login with return path
+    return <Navigate to="/members/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
@@ -270,6 +262,9 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/:section/:slug" element={<SectionPage />} />
             <Route path="/members/login" element={<Auth />} />
+            <Route path="/apply" element={<ApplicationForm />} />
+
+            {/* Protected Routes */}
             <Route
               path="/members"
               element={
@@ -326,7 +321,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            <Route path="/apply" element={<ApplicationForm />} />
           </Routes>
 
           {/* Footer */}
@@ -374,8 +368,8 @@ function HomePage() {
 
   return (
     <>
-      {/* Hero Section */}
-      <div className="relative h-[600px]">
+      {/* Hero Section - Improved mobile layout */}
+      <div className="relative h-[400px] sm:h-[600px]"> {/* Shorter height on mobile */}
         <div className="absolute inset-0">
           <img 
             src="https://csvfd-website.nyc3.digitaloceanspaces.com/photos/1740064374334-station-banner.jpg" 
@@ -386,10 +380,13 @@ function HomePage() {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 h-full flex items-center">
           <div className="text-white max-w-2xl">
-            <h2 className="text-5xl font-bold mb-6">Serving our community</h2>
-            <p className="text-xl mb-8">Fire Protection • Medical First Response • Community Service</p>
+            <h2 className="text-3xl sm:text-5xl font-bold mb-4 sm:mb-6">Serving our community</h2>
+            <p className="text-lg sm:text-xl mb-6 sm:mb-8">Fire Protection • Medical First Response • Community Service</p>
             <div className="flex space-x-4">
-              <button onClick={() => navigate('/apply')} className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition">
+              <button 
+                onClick={() => navigate('/apply')} 
+                className="w-full sm:w-auto bg-red-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-red-700 transition text-sm sm:text-base"
+              >
                 Join Our Team
               </button>
             </div>
@@ -397,38 +394,44 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Quick Info Section */}
-      <div className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8">
-          <div className="flex items-start space-x-4">
-
-            <Phone className="w-8 h-8 text-red-600 flex-shrink-0" />
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Emergency Contact</h3>
-              <p className="text-gray-600">Dial 911 for Emergencies</p>
-              <p className="text-gray-600">Non-Emergency: (704) 872-3221</p>
-            </div>
-          </div>
-          <div className="flex items-start space-x-4">
-            <Clock className="w-8 h-8 text-red-600 flex-shrink-0" />
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Station Hours</h3>
-              <div className="text-gray-600">
-                <p className="font-bold mb-1">24/7 Emergency Response</p>
-                <p className="font-medium mb-1">Manned Hours:</p>
-                <ul className="list-inside pl-2">
-                  <li>Mon-Fri 8AM-5PM</li>
-                  <li>Sat 2PM-10PM</li>
-                </ul>
+      {/* Quick Info Section - Improved mobile grid */}
+      <div className="bg-gray-50 py-8 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {/* Emergency Contact */}
+            <div className="flex items-start space-x-4 p-4 sm:p-0">
+              <Phone className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">Emergency Contact</h3>
+                <p className="text-sm sm:text-base text-gray-600">Dial 911 for Emergencies</p>
+                <p className="text-sm sm:text-base text-gray-600">Non-Emergency: (704) 872-3221</p>
               </div>
             </div>
-          </div>
-          <div className="flex items-start space-x-4">
-            <Users className="w-8 h-8 text-red-600 flex-shrink-0" />
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Volunteer</h3>
-              <p className="text-gray-600">Join our team of dedicated</p>
-              <p className="text-gray-600">firefighters and first responders</p>
+
+            {/* Station Hours */}
+            <div className="flex items-start space-x-4 p-4 sm:p-0">
+              <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">Station Hours</h3>
+                <div className="text-sm sm:text-base text-gray-600">
+                  <p className="font-bold mb-1">24/7 Emergency Response</p>
+                  <p className="font-medium mb-1">Manned Hours:</p>
+                  <ul className="list-inside pl-2">
+                    <li>Mon-Fri 8AM-5PM</li>
+                    <li>Sat 2PM-10PM</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Volunteer Info */}
+            <div className="flex items-start space-x-4 p-4 sm:p-0">
+              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">Volunteer</h3>
+                <p className="text-sm sm:text-base text-gray-600">Join our team of dedicated</p>
+                <p className="text-sm sm:text-base text-gray-600">firefighters and first responders</p>
+              </div>
             </div>
           </div>
         </div>
@@ -444,28 +447,33 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Latest Updates Section */}
-      <div className="bg-gray-50 py-16">
+      {/* Latest Updates Section - Improved mobile layout */}
+      <div className="bg-gray-50 py-8 sm:py-16">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Latest Updates</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">Latest Updates</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {/* Weather Card */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md">
-              <div className="p-6 text-center">
-                <h3 className="text-xl font-semibold mb-4">Weather Information</h3>
+              <div className="p-4 sm:p-6 text-center">
+                <h3 className="text-lg sm:text-xl font-semibold mb-4">Weather Information</h3>
                 <WeatherInfo />
               </div>
             </div>
+
+            {/* Social Media Card */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md">
-              <div className="p-6 pb-0 text-center">
-                <h3 className="text-xl font-semibold mb-4">Social Media</h3>
+              <div className="p-4 sm:p-6 pb-0 text-center">
+                <h3 className="text-lg sm:text-xl font-semibold mb-4">Social Media</h3>
               </div>
               <div className="aspect-[4/5]">
                 <FacebookFeed />
               </div>
             </div>
+
+            {/* Announcements Card */}
             <div className="bg-white rounded-lg overflow-hidden shadow-md">
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-4">Community Announcements</h3>
+              <div className="p-4 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-semibold mb-4">Community Announcements</h3>
                 <AnnouncementsDisplay />
               </div>
             </div>
