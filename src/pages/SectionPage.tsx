@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Page, PageSection } from '../types/database';
@@ -60,7 +60,8 @@ export function SectionPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      <PageContent page={page} />
+      <h1 className="text-3xl font-bold mb-6">{page.title}</h1>
+      <PageContent content={page.content} />
     </div>
   );
 }

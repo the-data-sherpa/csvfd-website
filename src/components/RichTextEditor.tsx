@@ -52,7 +52,8 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       <CKEditor
         onReady={(editor) => {
           if (toolbarRef.current && editor.ui.getEditableElement()) {
-            toolbarRef.current.appendChild(editor.ui.view.toolbar.element!);
+            const view = editor.ui.view as any;
+            toolbarRef.current.appendChild(view.toolbar.element);
             const editableElement = editor.ui.getEditableElement()!;
             editableElement.classList.add('document-editor__editable');
             
@@ -67,22 +68,13 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
             });
           }
         }}
-        onChange={(event, editor) => {
+        onChange={(_, editor) => {
           const data = editor.getData();
           onChange(data);
         }}
-        editor={Editor}
+        editor={Editor as any}
         data={content}
         config={{
-          entities: true,
-          entities_latin: false,
-          entities_greek: false,
-          entities_additional: {
-            nbsp: '&nbsp;',
-            shy: '&shy;'
-          },
-          enterMode: 'P',
-          shiftEnterMode: 'BR',
           htmlSupport: {
             allow: [
               {
@@ -93,6 +85,8 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
               }
             ]
           },
+          enterMode: 'P',
+          shiftEnterMode: 'BR',
           typing: {
             transformations: {
               remove: [
@@ -120,8 +114,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
               { 
                 model: 'paragraph', 
                 title: 'Paragraph', 
-                class: 'ck-heading_paragraph',
-                converterPriority: 'high'
+                class: 'ck-heading_paragraph'
               },
               {
                 model: 'heading1',
@@ -130,8 +123,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
                   classes: 'text-4xl font-bold mb-6'
                 },
                 title: 'Heading 1',
-                class: 'ck-heading_heading1',
-                converterPriority: 'high'
+                class: 'ck-heading_heading1'
               },
               {
                 model: 'heading2',
@@ -140,8 +132,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
                   classes: 'text-3xl font-bold mb-5'
                 },
                 title: 'Heading 2',
-                class: 'ck-heading_heading2',
-                converterPriority: 'high'
+                class: 'ck-heading_heading2'
               },
               {
                 model: 'heading3',
@@ -150,8 +141,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
                   classes: 'text-2xl font-bold mb-4'
                 },
                 title: 'Heading 3',
-                class: 'ck-heading_heading3',
-                converterPriority: 'high'
+                class: 'ck-heading_heading3'
               }
             ]
           },
@@ -184,7 +174,6 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
               'outdent',
               'indent',
               '|',
-              'removeFormat',
               'link',
               'blockQuote',
               'insertTable',
@@ -197,17 +186,32 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           },
           image: {
             toolbar: [
+              'imageStyle:inline',
+              'imageStyle:block',
               'imageStyle:alignLeft',
               'imageStyle:alignCenter',
               'imageStyle:alignRight',
               '|',
               'imageTextAlternative'
             ],
-            styles: [
-              'alignLeft',
-              'alignCenter',
-              'alignRight'
-            ],
+            styles: {
+              options: [
+                'inline',
+                'block',
+                { 
+                  name: 'alignLeft',
+                  className: 'image-style-align-left',
+                },
+                { 
+                  name: 'alignCenter',
+                  className: 'image-style-align-center',
+                },
+                { 
+                  name: 'alignRight',
+                  className: 'image-style-align-right',
+                }
+              ]
+            },
             resizeUnit: '%',
             resizeOptions: [ 
               {
@@ -236,7 +240,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
               'tableProperties'
             ]
           }
-        }}
+        } as any}
       />
       </div>
       <div 
