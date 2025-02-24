@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Page, PageSection } from '../types/database';
@@ -62,8 +62,9 @@ export function CMSDashboard() {
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'pages'
-      }, (payload) => {
+        table: 'pages',
+        filter: 'published=eq.true'
+      }, () => {
         fetchPages();
       })
       .subscribe();

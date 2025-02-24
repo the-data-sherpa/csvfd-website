@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { supabaseAdmin } from '../lib/supabase-admin';
@@ -44,10 +44,7 @@ export function AnnouncementEditor() {
     try {
       const { data, error } = await supabase
         .from('announcements')
-        .select(`
-          *,
-          profiles:created_by (email)
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -72,7 +69,7 @@ export function AnnouncementEditor() {
         content: announcement.content || '',
         published: announcement.published,
         updated_at: new Date().toISOString(),
-        created_by: user?.id
+        created_by: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Member'
       };
 
       let error;
@@ -161,9 +158,9 @@ export function AnnouncementEditor() {
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="space-y-4">
-              {!isNew && announcement.profiles?.email && (
+              {!isNew && announcement.created_by && (
                 <div className="text-sm text-gray-500">
-                  Created by {announcement.profiles.email.split('@')[0]}
+                  Created by {announcement.created_by}
                 </div>
               )}
               <div>

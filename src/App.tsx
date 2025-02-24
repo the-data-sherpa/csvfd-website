@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Phone, Clock, AlertTriangle, Users, Calendar, Facebook, Instagram, Twitter, LogOut, ChevronDown, Settings } from 'lucide-react';
+import { Phone, Clock, AlertTriangle, Users, Facebook, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { CallStatistics } from './components/CallStatistics';
 import { FacebookFeed } from './components/FacebookFeed';
 import { SectionPage } from './pages/SectionPage';
@@ -341,10 +341,10 @@ function App() {
                 <div>
                   <h4 className="text-xl font-semibold mb-4">Resources</h4>
                   <ul className="space-y-2">
-                    <li><a href="#" className="hover:text-red-400 transition">Fire Safety Tips</a></li>
-                    <li><a href="#" className="hover:text-red-400 transition">Community Programs</a></li>
-                    <li><a href="#" className="hover:text-red-400 transition">FAQs</a></li>
-                    <li><a href="#" className="hover:text-red-400 transition">News & Updates</a></li>
+                    <li><a href="https://apps.ncagr.gov/burnpermits/" target="_blank" className="hover:text-red-400 transition">Online Burn Permit</a></li>
+                    <li><a href="https://www.sparky.org/" target="_blank" className="hover:text-red-400 transition">Sparky The Dog</a></li>
+                    <li><a href="https://www.readync.gov/" target="_blank" className="hover:text-red-400 transition">ReadyNC</a></li>
+                    <li><a href="https://www.iredellcountync.gov/219/Fire-Marshals-Office" target="_blank" className="hover:text-red-400 transition">Fire Marshals Office</a></li>
                   </ul>
                 </div>
                 <div>

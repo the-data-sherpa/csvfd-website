@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Calendar } from 'lucide-react';
 import DOMPurify from 'dompurify';
@@ -18,6 +18,27 @@ export function AnnouncementsDisplay() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function fetchAnnouncements() {
+      try {
+        const { data, error } = await supabase
+          .from('announcements')
+          .select('*')
+          .eq('published', true)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        const announcements = data?.map(a => ({
+          ...a,
+          user_email: a.created_by || 'Member'
+        })) || [];
+        setAnnouncements(announcements);
+      } catch (err) {
+        console.error('Error fetching announcements:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchAnnouncements();
 
     const subscription = supabase
@@ -36,31 +57,6 @@ export function AnnouncementsDisplay() {
       subscription.unsubscribe();
     };
   }, []);
-
-  async function fetchAnnouncements() {
-    try {
-      const { data, error } = await supabase
-        .from('announcements')
-        .select(`
-          *,
-          profiles:created_by (email)
-        `)
-        .eq('published', true)
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      if (error) throw error;
-      const announcements = data?.map(a => ({
-        ...a,
-        user_email: a.profiles?.email || 'Unknown'
-      })) || [];
-      setAnnouncements(announcements);
-    } catch (err) {
-      console.error('Error fetching announcements:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   if (loading) {
     return (
