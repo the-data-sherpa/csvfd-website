@@ -14,20 +14,6 @@ const SECTION_TITLES: Record<PageSection, string> = {
   'members': 'Members'
 };
 
-async function handlePublishToggle(page: Page) {
-  try {
-    const { error } = await supabase
-      .from('pages')
-      .update({ published: !page.published })
-      .eq('id', page.id);
-
-    if (error) throw error;
-    // No need to manually fetch pages due to real-time subscription
-  } catch (err) {
-    console.error('Error toggling publish status:', err);
-  }
-}
-
 export function CMSDashboard() {
   const navigate = useNavigate();
   const [pages, setPages] = useState<Record<PageSection, Page[]>>({
@@ -39,6 +25,39 @@ export function CMSDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+
+  async function handlePublishToggle(page: Page) {
+    try {
+      console.log('Toggling publish status for:', page.title);
+      console.log('Current status:', page.published);
+      
+      const newStatus = !page.published;
+      console.log('New status will be:', newStatus);
+      
+      const { data, error } = await supabase
+        .from('pages')
+        .update({ published: newStatus })
+        .eq('id', page.id)
+        .select('*');
+
+      if (error) throw error;
+      
+      console.log('Update successful:', data);
+      
+      // Force an immediate state update
+      setPages(prevPages => {
+        const newPages = { ...prevPages };
+        const section = page.section as PageSection; // Type assertion to fix index error
+        newPages[section] = newPages[section].map((p: Page) => 
+          p.id === page.id ? { ...p, published: newStatus } : p
+        );
+        return newPages;
+      });
+      
+    } catch (err) {
+      console.error('Error toggling publish status:', err);
+    }
+  }
 
   async function fetchPages() {
     try {
@@ -76,9 +95,9 @@ export function CMSDashboard() {
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'pages',
-        filter: 'published=eq.true'
+        table: 'pages'
       }, () => {
+        console.log('Received database change');
         fetchPages();
       })
       .subscribe();
@@ -206,16 +225,31 @@ export function CMSDashboard() {
                                   <span className="text-gray-900">{page.title}</span>
                                 </td>
                                 <td className="px-6 py-4">
-                                  <button
-                                    onClick={() => handlePublishToggle(page)}
-                                    className={`px-2 py-1 rounded-full text-xs font-semibold transition-colors duration-200 ${
-                                      page.published
-                                        ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                                    }`}
-                                  >
-                                    {page.published ? 'Published' : 'Draft'}
-                                  </button>
+                                  <div className="flex items-center">
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={page.published}
+                                        onChange={() => handlePublishToggle(page)}
+                                        className="sr-only"
+                                      />
+                                      <div className={`w-[120px] h-6 rounded-full relative transition-colors duration-300 
+                                        ${page.published ? 'bg-green-100' : 'bg-gray-200'}`}>
+                                        <div className={`absolute top-[2px] left-[2px] bg-white rounded-full h-5 w-[56px] 
+                                          transition-transform duration-300 transform
+                                          ${page.published ? 'translate-x-[60px]' : 'translate-x-0'}`}>
+                                        </div>
+                                        <span className={`absolute left-2 text-xs font-medium text-gray-800 transition-opacity duration-300
+                                          ${page.published ? 'opacity-100' : 'opacity-0'}`}>
+                                          Published
+                                        </span>
+                                        <span className={`absolute right-2 text-xs font-medium text-gray-800 transition-opacity duration-300
+                                          ${page.published ? 'opacity-0' : 'opacity-100'}`}>
+                                          Draft
+                                        </span>
+                                      </div>
+                                    </label>
+                                  </div>
                                 </td>
                                 <td className="px-6 py-4 text-gray-500">
                                   {new Date(page.updated_at).toLocaleDateString()}
