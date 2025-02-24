@@ -14,6 +14,20 @@ const SECTION_TITLES: Record<PageSection, string> = {
   'members': 'Members'
 };
 
+async function handlePublishToggle(page: Page) {
+  try {
+    const { error } = await supabase
+      .from('pages')
+      .update({ published: !page.published })
+      .eq('id', page.id);
+
+    if (error) throw error;
+    // No need to manually fetch pages due to real-time subscription
+  } catch (err) {
+    console.error('Error toggling publish status:', err);
+  }
+}
+
 export function CMSDashboard() {
   const navigate = useNavigate();
   const [pages, setPages] = useState<Record<PageSection, Page[]>>({
@@ -192,15 +206,16 @@ export function CMSDashboard() {
                                   <span className="text-gray-900">{page.title}</span>
                                 </td>
                                 <td className="px-6 py-4">
-                                  {page.published ? (
-                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                      Published
-                                    </span>
-                                  ) : (
-                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                      Draft
-                                    </span>
-                                  )}
+                                  <button
+                                    onClick={() => handlePublishToggle(page)}
+                                    className={`px-2 py-1 rounded-full text-xs font-semibold transition-colors duration-200 ${
+                                      page.published
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                                    }`}
+                                  >
+                                    {page.published ? 'Published' : 'Draft'}
+                                  </button>
                                 </td>
                                 <td className="px-6 py-4 text-gray-500">
                                   {new Date(page.updated_at).toLocaleDateString()}
