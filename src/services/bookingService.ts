@@ -2,7 +2,6 @@ import { supabase } from '../lib/supabase';
 import { Event, EventFormData, Location, CalendarEventDisplay } from '../types/booking';
 import { format } from 'date-fns';
 import { parseISO } from 'date-fns/parseISO';
-import ical from 'ical-generator';
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from './googleCalendar';
 
 interface EventWithDetails extends Omit<Event, 'created_by_user' | 'location'> {
@@ -253,33 +252,77 @@ export const fetchLocations = async (): Promise<Location[]> => {
   return data || [];
 };
 
+// Helper function to format date for iCal
+const formatDateForICal = (date: Date): string => {
+  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+};
+
+// Helper function to escape text for iCal
+const escapeICalText = (text: string): string => {
+  return text
+    .replace(/[\\;,]/g, (match) => '\\' + match)
+    .replace(/\n/g, '\\n');
+};
+
 export const exportEventsToICal = (events: Event[]): void => {
-  const calendar = ical({
-    name: 'CSVFD Events',
-    timezone: 'Europe/London'
-  });
+  // Start building iCal content
+  let icalContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Cool Spring VFD//Events Calendar//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'X-WR-CALNAME:Cool Spring VFD Events',
+    'X-WR-TIMEZONE:America/New_York'
+  ];
 
+  // Add each event
   events.forEach(event => {
-    calendar.createEvent({
-      start: new Date(event.start_time),
-      end: new Date(event.end_time),
-      summary: event.title,
-      description: event.description || '',
-      location: event.location?.name || ''
-    });
+    const startDate = new Date(event.start_time);
+    const endDate = new Date(event.end_time);
+    
+    // Create event lines, excluding optional fields if they're empty
+    const eventLines = [
+      'BEGIN:VEVENT',
+      `UID:${event.id}@coolspringsvfd.org`,
+      `DTSTAMP:${formatDateForICal(new Date())}`,
+      `DTSTART:${formatDateForICal(startDate)}`,
+      `DTEND:${formatDateForICal(endDate)}`,
+      `SUMMARY:${escapeICalText(event.title)}`
+    ];
+
+    // Add optional fields if they exist
+    if (event.description) {
+      eventLines.push(`DESCRIPTION:${escapeICalText(event.description)}`);
+    }
+    if (event.location?.name) {
+      eventLines.push(`LOCATION:${escapeICalText(event.location.name)}`);
+    }
+    
+    eventLines.push(
+      `ORGANIZER;CN=Cool Spring VFD:mailto:${event.created_by_user?.email || 'no-reply@coolspringsvfd.org'}`,
+      'END:VEVENT'
+    );
+
+    // Add all event lines to the calendar content
+    icalContent = icalContent.concat(eventLines);
   });
 
-  const icalData = calendar.toString();
-  
-  const blob = new Blob([icalData], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+  // Close the calendar
+  icalContent.push('END:VCALENDAR');
+
+  // Join with CRLF as required by iCal spec
+  const fileContent = icalContent.join('\r\n');
+
+  // Create and download the file
+  const blob = new Blob([fileContent], { type: 'text/calendar;charset=utf-8' });
   const link = document.createElement('a');
-  link.href = url;
-  link.download = 'csvfd-events.ics';
+  link.href = window.URL.createObjectURL(blob);
+  link.download = 'cool-spring-events.ics';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  window.URL.revokeObjectURL(link.href);
 };
 
 export const generateGoogleCalendarUrl = (events: Event[]): string => {

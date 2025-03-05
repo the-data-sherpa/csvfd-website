@@ -5,7 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import { Button } from './ui/button';
-import { Calendar, Download, PlusCircle, RefreshCw, X } from 'lucide-react';
+import { Calendar, Download, PlusCircle, RefreshCw, X, Flame, Clock, MapPin } from 'lucide-react';
 import { EventEditor } from './EventEditor';
 import { Event, CalendarEventDisplay, Location } from '../types/booking';
 import { fetchEvents, fetchLocations, exportEventsToICal, generateGoogleCalendarUrl } from '../services/bookingService';
@@ -13,6 +13,84 @@ import { toast, Toaster } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
+
+// Add styles as a CSS module or in your global CSS file
+const calendarStyles = `
+  .fire-dept-event {
+    border-radius: 4px !important;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .fire-dept-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.2s ease;
+  }
+  
+  .fire-dept-event-content {
+    width: 100%;
+    height: 100%;
+    padding: 2px 4px;
+  }
+  
+  .fc-event-title {
+    font-weight: 600 !important;
+  }
+  
+  .fc-daygrid-day-frame {
+    height: 150px !important;
+    max-height: 150px !important;
+    overflow-y: auto !important;
+  }
+
+  .fc-daygrid-day-events {
+    margin-bottom: 0 !important;
+  }
+
+  .fc-daygrid-event {
+    white-space: normal !important;
+    align-items: flex-start !important;
+    margin-bottom: 2px !important;
+  }
+  
+  .fc .fc-daygrid-day.fc-day-today {
+    background-color: #fee2e2 !important;
+  }
+  
+  .fc .fc-button-primary {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+  }
+  
+  .fc .fc-button-primary:hover {
+    background-color: #b91c1c !important;
+    border-color: #b91c1c !important;
+  }
+  
+  .fc .fc-button-primary:disabled {
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+  }
+
+  /* Custom scrollbar styles */
+  .fc-daygrid-day-frame::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .fc-daygrid-day-frame::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .fc-daygrid-day-frame::-webkit-scrollbar-thumb {
+    background: #dc2626;
+    border-radius: 4px;
+  }
+
+  .fc-daygrid-day-frame::-webkit-scrollbar-thumb:hover {
+    background: #b91c1c;
+  }
+`;
 
 export function BookingCalendar() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -302,9 +380,10 @@ export function BookingCalendar() {
         title: event.title,
         start: event.start_time,
         end: event.end_time,
-        backgroundColor: location?.color || '#3788d8',
-        borderColor: location?.color || '#3788d8',
+        backgroundColor: location?.color || '#dc2626', // Default to red if no color
+        borderColor: location?.color || '#dc2626',
         textColor: '#ffffff',
+        classNames: ['fire-dept-event'],
         extendedProps: {
           description: event.description || '',
           locationName: location?.name || 'Unknown Location',
@@ -317,21 +396,43 @@ export function BookingCalendar() {
 
   // Custom render for event content
   const eventContent = (eventInfo: any) => {
+    const timeText = eventInfo.timeText;
     const locationName = eventInfo.event.extendedProps.locationName;
     
     return (
-      <>
-        <b>{eventInfo.timeText}</b>
-        <div className="fc-event-title">{eventInfo.event.title}</div>
-        <div className="fc-event-location text-xs">{locationName}</div>
-      </>
+      <div className="fire-dept-event-content p-1">
+        <div className="flex items-center gap-1 text-xs font-medium mb-1">
+          <Clock className="w-3 h-3" />
+          <span>{timeText}</span>
+        </div>
+        <div className="flex items-center gap-1 font-semibold">
+          <Flame className="w-3 h-3" />
+          <div className="event-title truncate">{eventInfo.event.title}</div>
+        </div>
+        <div className="flex items-center gap-1 text-xs mt-1 opacity-90">
+          <MapPin className="w-3 h-3" />
+          <span className="truncate">{locationName}</span>
+        </div>
+      </div>
     );
   };
+
+  useEffect(() => {
+    // Add styles to head when component mounts
+    const styleElement = document.createElement('style');
+    styleElement.textContent = calendarStyles;
+    document.head.appendChild(styleElement);
+
+    // Clean up styles when component unmounts
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   return (
     <div className="calendar-container">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Department Event Calendar</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Department Event Calendar</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={loadData}>
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -344,6 +445,7 @@ export function BookingCalendar() {
           {user && (
             <Button 
               size="sm" 
+              className="bg-red-600 hover:bg-red-700"
               onClick={() => {
                 openEventEditor(new Date(), null, true);
               }}
@@ -355,7 +457,7 @@ export function BookingCalendar() {
         </div>
       </div>
       
-      <div className="calendar-wrapper border rounded-md p-2 bg-white">
+      <div className="calendar-wrapper border rounded-md p-2 bg-white shadow-sm">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
@@ -372,6 +474,11 @@ export function BookingCalendar() {
           selectable={!!user}
           editable={false}
           height="auto"
+          eventTimeFormat={{
+            hour: 'numeric',
+            minute: '2-digit',
+            meridiem: 'short'
+          }}
         />
       </div>
       
