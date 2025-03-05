@@ -14,6 +14,13 @@ const SECTION_TITLES: Record<PageSection, string> = {
   'members': 'Members'
 };
 
+interface PageStats {
+  total: number;
+  published: number;
+  draft: number;
+  lastUpdated: string | null;
+}
+
 export function CMSDashboard() {
   const navigate = useNavigate();
   const [pages, setPages] = useState<Record<PageSection, Page[]>>({
@@ -25,6 +32,12 @@ export function CMSDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [stats, setStats] = useState<PageStats>({
+    total: 0,
+    published: 0,
+    draft: 0,
+    lastUpdated: null
+  });
 
   async function handlePublishToggle(page: Page) {
     try {
@@ -79,6 +92,17 @@ export function CMSDashboard() {
         return acc;
       }, {} as Record<PageSection, Page[]>);
       setPages(groupedPages);
+
+      // Calculate stats
+      if (data) {
+        const published = data.filter(page => page.published).length;
+        setStats({
+          total: data.length,
+          published,
+          draft: data.length - published,
+          lastUpdated: data[0]?.updated_at || null
+        });
+      }
     } catch (err) {
       console.error('Error fetching pages:', err);
     } finally {
@@ -141,6 +165,47 @@ export function CMSDashboard() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Quick Stats */}
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
+          {loading ? (
+            Array(4).fill(0).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-md p-6">
+                <div className="h-4 bg-gray-200 rounded animate-pulse mb-2 w-24"></div>
+                <div className="h-8 bg-gray-200 rounded animate-pulse w-16"></div>
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h4 className="text-sm text-gray-500 uppercase">Total Pages</h4>
+                <p className="text-2xl font-semibold mt-2">{stats.total}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h4 className="text-sm text-gray-500 uppercase">Published</h4>
+                <p className="text-2xl font-semibold mt-2">{stats.published}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h4 className="text-sm text-gray-500 uppercase">Draft</h4>
+                <p className="text-2xl font-semibold mt-2">{stats.draft}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h4 className="text-sm text-gray-500 uppercase">Last Updated</h4>
+                <p className="text-2xl font-semibold mt-2">
+                  {stats.lastUpdated
+                    ? new Date(stats.lastUpdated).toLocaleString('en-US', {
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true,
+                        month: 'short',
+                        day: 'numeric'
+                      })
+                    : 'Never'}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+
         {/* Announcements Editor */}
         <div className="bg-white rounded-lg shadow-md mb-8">
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">

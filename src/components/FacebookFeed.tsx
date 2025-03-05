@@ -13,7 +13,7 @@ export function FacebookFeed() {
           }}
           scrolling="no"
           frameBorder="0"
-          allowtransparency="true"
+          allowTransparency={false}
           title="Cool Springs VFD Facebook Feed"
         />
       </div>

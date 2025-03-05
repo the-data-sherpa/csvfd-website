@@ -25,7 +25,7 @@ ADD COLUMN IF NOT EXISTS certifications_expire timestamptz;
 -- Create duty_shifts table
 CREATE TABLE IF NOT EXISTS duty_shifts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES site_users(id) ON DELETE CASCADE,
+  id uuid REFERENCES site_users(id) ON DELETE CASCADE,
   date date NOT NULL,
   shift_type text NOT NULL CHECK (shift_type IN ('day', 'night')),
   status text NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'completed', 'missed')),

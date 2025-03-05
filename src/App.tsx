@@ -17,6 +17,7 @@ import { WeatherInfo } from './components/WeatherInfo';
 import { AnnouncementEditor } from './pages/AnnouncementEditor';
 import { AnnouncementsDisplay } from './components/AnnouncementsDisplay';
 import { ApplicationForm } from './pages/ApplicationForm';
+import { Toaster } from 'react-hot-toast';
 
 function Navigation() {
   const { user } = useAuth();
@@ -247,6 +248,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <Router>
         <div className="min-h-screen bg-white">
           {/* Emergency Banner */}
