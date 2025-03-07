@@ -34,9 +34,7 @@ export function AdminDashboard() {
   async function fetchUsers() {
     try {
       const { data, error } = await supabase
-        .from('site_users')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_users_with_emails');
 
       if (error) throw error;
       setUsers(data || []);
