@@ -1,8 +1,28 @@
 import * as jose from 'jose';
 
 export const CALENDAR_ID = 'c_09e207f03a766a994be1825708facc96af8fa61e17ae808977859925ce1c3fa6@group.calendar.google.com';
-const SERVICE_ACCOUNT_EMAIL = import.meta.env.VITE_GOOGLE_SERVICE_ACCOUNT_EMAIL;
-const PRIVATE_KEY = import.meta.env.VITE_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+// Access environment variables through the defined object
+const ENV = (window as any).__VITE_ENV_VARS__ || {};
+const SERVICE_ACCOUNT_EMAIL = ENV.VITE_GOOGLE_SERVICE_ACCOUNT_EMAIL || import.meta.env.VITE_GOOGLE_SERVICE_ACCOUNT_EMAIL;
+const PRIVATE_KEY = (ENV.VITE_GOOGLE_PRIVATE_KEY || import.meta.env.VITE_GOOGLE_PRIVATE_KEY)
+  ?.replace(/\\n/g, '\n')  // Replace string literal \n with newlines
+  ?.replace(/["']/g, '')   // Remove any quotes
+  ?.trim();                // Remove any extra whitespace
+
+// Debug logging
+console.log('Environment Variables Status:', {
+  hasServiceEmail: !!SERVICE_ACCOUNT_EMAIL,
+  hasPrivateKey: !!PRIVATE_KEY,
+  envSource: (window as any).__VITE_ENV_VARS__ ? 'define' : 'import.meta.env'
+});
+
+if (!SERVICE_ACCOUNT_EMAIL || !PRIVATE_KEY) {
+  console.error('Missing required environment variables:',
+    !SERVICE_ACCOUNT_EMAIL ? 'VITE_GOOGLE_SERVICE_ACCOUNT_EMAIL' : '',
+    !PRIVATE_KEY ? 'VITE_GOOGLE_PRIVATE_KEY' : ''
+  );
+}
 
 interface CalendarEvent {
   id?: string;
