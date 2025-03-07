@@ -79,7 +79,7 @@ FOR ALL
 USING (
   EXISTS (
     SELECT 1 FROM site_users
-    WHERE site_users.email = auth.jwt() ->> 'email'
+    WHERE site_users.authid = auth.uid()
     AND site_users.role IN ('admin', 'webmaster')
   )
 );

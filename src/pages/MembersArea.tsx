@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Layout, FileText, Bell, Mail, Shield } from 'lucide-react';
+import { Layout, FileText, Bell, Mail, Shield, ClipboardList } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { BookingCalendar } from '../components/BookingCalendar';
+import { SignUpSheetList } from '../components/SignUpSheet';
 
 export function MembersArea() {
   const { role } = useAuth();
@@ -96,6 +97,11 @@ export function MembersArea() {
               </div>
             </Link>
           )}
+        </div>
+
+        {/* Sign-up Sheets Section */}
+        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+          <SignUpSheetList />
         </div>
 
         {/* Calendar Section */}

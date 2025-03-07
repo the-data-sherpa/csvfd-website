@@ -32,6 +32,7 @@ export interface EventFormData {
   end_time: string;    // ISO format date string
   location_id: string;
   is_public: boolean;
+  created_by?: string;  // Make it optional since it's added during submission
 }
 
 export interface CalendarEventDisplay {

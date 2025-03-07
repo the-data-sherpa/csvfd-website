@@ -100,9 +100,8 @@ export function BookingCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [showEventEditor, setShowEventEditor] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
   const calendarRef = useRef<FullCalendar>(null);
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   
   // Add state for the view-only event dialog
   const [viewEvent, setViewEvent] = useState<Event | null>(null);
@@ -115,72 +114,23 @@ export function BookingCalendar() {
     loadData();
   }, []);
 
-  // Add a separate useEffect for user role
-  useEffect(() => {
-    if (user?.email) {
-      console.log('[DEBUG] User changed, fetching role for:', user.email);
-      fetchUserRole();
-    } else {
-      console.log('[DEBUG] No user available, clearing role');
-      setUserRole(null);
-    }
-  }, [user?.email]); // Only re-run when user email changes
-
-  const fetchUserRole = async () => {
-    if (!user?.email) {
-      console.log('[DEBUG] fetchUserRole: No user email available');
-      setUserRole(null);
-      return;
-    }
-    
-    console.log('[DEBUG] fetchUserRole: Fetching role for email:', user.email);
-    
-    try {
-      const { data, error } = await supabase
-        .from('site_users')
-        .select('role')
-        .eq('email', user.email)
-        .single();
+  const handleEventClick = (info: any) => {
+    const eventId = info.event.id;
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      // If user is admin/webmaster, they can edit any event
+      // Otherwise, they can only edit their own events
+      const isAdminOrWebmaster = ['admin', 'webmaster'].includes(role || '');
+      const isCreator = user?.id && user.id === event.created_by;
       
-      if (error) {
-        console.error('[DEBUG] fetchUserRole: Error fetching role:', error);
-        // Only set member role if there's a specific "not found" error
-        if (error.code === 'PGRST116') {
-          console.log('[DEBUG] fetchUserRole: User not found, creating new member record');
-          await createNewUserRecord();
-        } else {
-          console.error('[DEBUG] fetchUserRole: Unexpected error:', error);
-          setUserRole(null);
-        }
-        return;
-      }
-      
-      if (data) {
-        console.log('[DEBUG] fetchUserRole: Found role:', data.role);
-        setUserRole(data.role);
-      }
-    } catch (e) {
-      console.error('[DEBUG] fetchUserRole: Exception:', e);
-      setUserRole(null);
-    }
-  };
-
-  const createNewUserRecord = async () => {
-    if (!user?.email) return;
-    
-    try {
-      const { error: insertError } = await supabase
-        .from('site_users')
-        .insert([{ email: user.email, role: 'member' }]);
-        
-      if (insertError) {
-        console.error('[DEBUG] createNewUserRecord: Error creating user record:', insertError);
+      if (isAdminOrWebmaster || isCreator) {
+        openEventEditor(null, event, false);
       } else {
-        console.log('[DEBUG] createNewUserRecord: Created new site_users record with member role');
-        setUserRole('member');
+        // Show event details in a custom dialog instead of an alert
+        console.log('[DEBUG] handleEventClick: Showing view-only dialog for event', event.id);
+        setViewEvent(event);
+        setShowViewDialog(true);
       }
-    } catch (e) {
-      console.error('[DEBUG] createNewUserRecord: Exception creating user record:', e);
     }
   };
 
@@ -248,26 +198,6 @@ export function BookingCalendar() {
     }, 50);
   };
 
-  const handleEventClick = (info: any) => {
-    const eventId = info.event.id;
-    const event = events.find(e => e.id === eventId);
-    if (event) {
-      // If user is admin/webmaster, they can edit any event
-      // Otherwise, they can only edit their own events
-      const isAdminOrWebmaster = ['admin', 'webmaster'].includes(userRole || '');
-      const isCreator = user?.id && user.id === event.created_by;
-      
-      if (isAdminOrWebmaster || isCreator) {
-        openEventEditor(null, event, false);
-      } else {
-        // Show event details in a custom dialog instead of an alert
-        console.log('[DEBUG] handleEventClick: Showing view-only dialog for event', event.id);
-        setViewEvent(event);
-        setShowViewDialog(true);
-      }
-    }
-  };
-
   // Add a function to close the view dialog
   const closeViewDialog = () => {
     console.log('[DEBUG] closeViewDialog: Closing view dialog');
@@ -288,7 +218,7 @@ export function BookingCalendar() {
 
   const handleDateClick = (info: any) => {
     console.log('[DEBUG] handleDateClick: Date clicked', info.dateStr);
-    console.log('[DEBUG] handleDateClick: Current user role:', userRole);
+    console.log('[DEBUG] handleDateClick: Current user role:', role);
     console.log('[DEBUG] handleDateClick: User object:', user);
     
     // Check if an event was recently deleted

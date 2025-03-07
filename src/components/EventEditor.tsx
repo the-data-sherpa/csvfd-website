@@ -9,8 +9,7 @@ import { CalendarIcon, Trash, AlertTriangle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar } from './ui/calendar';
 import { cn } from '../lib/utils';
-import { format } from 'date-fns';
-import { parseISO } from 'date-fns/parseISO';
+import { format, addHours } from 'date-fns';
 import { Event, EventFormData, Location } from '../types/booking';
 import { createEvent, updateEvent, deleteEvent, fetchLocations } from '../services/bookingService';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,6 +26,15 @@ interface EventEditorProps {
   onEventDeleted?: (eventId: string) => void;
 }
 
+const defaultFormData: EventFormData = {
+  title: '',
+  description: '',
+  start_time: new Date().toISOString(),
+  end_time: addHours(new Date(), 1).toISOString(),
+  location_id: '',
+  is_public: true
+};
+
 export function EventEditor({
   event,
   date,
@@ -37,81 +45,122 @@ export function EventEditor({
   onEventDeleted
 }: EventEditorProps) {
   const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const { user } = useAuth();
-  const isNewEvent = !event;
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState<EventFormData>(defaultFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReady, setIsReady] = useState(false);
-
-  // Add state for delete confirmation dialog
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const { user, role, siteUser } = useAuth();
 
-  const [formData, setFormData] = useState<EventFormData>({
-    title: event?.title || '',
-    description: event?.description || '',
-    start_time: event?.start_time || (date ? format(date, "yyyy-MM-dd'T'HH:mm:ssXXX") : ''),
-    end_time: event?.end_time || (date ? format(new Date(date.getTime() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm:ssXXX") : ''),
-    location_id: event?.location_id || '',
-    is_public: event?.is_public ?? true
-  });
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    formData.start_time ? parseISO(formData.start_time) : undefined
-  );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    formData.end_time ? parseISO(formData.end_time) : undefined
-  );
+  // Fetch locations when component mounts
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const { data: locations, error } = await supabase
+          .from('locations')
+          .select('*')
+          .order('name');
+
+        if (error) throw error;
+        setLocations(locations || []);
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+        toast.error('Failed to load locations');
+      }
+    };
+
+    if (isOpen) {
+      loadLocations();
+    }
+  }, [isOpen]);
+
+  // Helper function to safely format dates
+  const safeFormat = (dateString: string, formatString: string): string => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      return format(date, formatString);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
-    
-    if (isOpen) {
-      console.log('[DEBUG] EventEditor useEffect: Opening editor', { event: event?.id, date, isNewEvent });
-      setIsReady(false);
-      
-      // Reset form data when opening the editor
-      const initialData: EventFormData = {
-        title: event?.title || '',
-        description: event?.description || '',
-        start_time: event?.start_time || (date ? format(date, "yyyy-MM-dd'T'HH:mm:ssXXX") : ''),
-        end_time: event?.end_time || (date ? format(new Date(date.getTime() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm:ssXXX") : ''),
-        location_id: event?.location_id || '',
-        is_public: event?.is_public ?? true
-      };
-      
-      console.log('[DEBUG] EventEditor useEffect: Setting initial form data', initialData);
-      if (isMounted) {
-        setFormData(initialData);
-        setStartDate(initialData.start_time ? parseISO(initialData.start_time) : undefined);
-        setEndDate(initialData.end_time ? parseISO(initialData.end_time) : undefined);
+    const loadEventData = async () => {
+      if (event?.id) {
+        try {
+          // Fetch event with location data in a single query
+          const { data: eventData, error } = await supabase
+            .from('events')
+            .select(`
+              *,
+              locations (
+                id,
+                name
+              )
+            `)
+            .eq('id', event.id)
+            .single();
+
+          if (error) throw error;
+          if (!eventData) throw new Error('Event not found');
+
+          // Ensure we have valid dates
+          const startDate = new Date(eventData.start_time);
+          const endDate = new Date(eventData.end_time);
+
+          if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            throw new Error('Invalid date values in event');
+          }
+
+          console.log('Loading event data:', eventData);
+
+          const newFormData: EventFormData = {
+            title: eventData.title || '',
+            description: eventData.description || '',
+            start_time: eventData.start_time,
+            end_time: eventData.end_time,
+            location_id: eventData.location_id || '',
+            is_public: eventData.is_public !== undefined ? eventData.is_public : true
+          };
+          
+          console.log('Setting form data with location:', newFormData.location_id);
+          setFormData(newFormData);
+          setIsReady(true);
+        } catch (error) {
+          console.error('Error loading event:', error);
+          toast.error('Error loading event details');
+          onClose();
+        }
+      } else if (date) {
+        setFormData({
+          ...defaultFormData,
+          start_time: date.toISOString(),
+          end_time: addHours(date, 1).toISOString()
+        });
+        setIsReady(true);
+      } else {
+        setFormData(defaultFormData);
+        setIsReady(true);
       }
-      
-      // Load data in parallel
-      console.log('[DEBUG] EventEditor useEffect: Loading data in parallel');
-      Promise.all([
-        loadLocations(),
-        fetchUserRole()
-      ]).then(() => {
-        if (isMounted) {
-          console.log('[DEBUG] EventEditor useEffect: Data loading complete');
-          setIsReady(true);
-        }
-      }).catch(err => {
-        if (isMounted) {
-          console.error('[DEBUG] EventEditor useEffect: Error initializing EventEditor:', err);
-          setIsReady(true);
-        }
-      });
-    } else {
-      console.log('[DEBUG] EventEditor useEffect: Editor closed');
-    }
-    
-    // Cleanup function
-    return () => {
-      console.log('[DEBUG] EventEditor useEffect: Cleanup function called');
-      isMounted = false;
     };
-  }, [isOpen, event, date]);
+
+    if (isOpen) {
+      loadEventData();
+    } else {
+      setFormData(defaultFormData);
+      setIsReady(false);
+    }
+  }, [event?.id, date, isOpen, onClose]);
+
+  // Add debug logging for locations and form data
+  useEffect(() => {
+    console.log('Current locations:', locations);
+    console.log('Current form data:', formData);
+  }, [locations, formData]);
 
   useEffect(() => {
     if (isReady && isOpen && titleInputRef.current) {
@@ -125,203 +174,95 @@ export function EventEditor({
     }
   }, [isReady, isOpen]);
 
-  const fetchUserRole = async () => {
-    if (!user?.email) return;
-    
-    console.log('Fetching role for email:', user.email);
-    
-    try {
-      const { data, error } = await supabase
-        .from('site_users')
-        .select('role')
-        .eq('email', user.email)
-        .single();
-      
-      if (data && !error) {
-        console.log('Found role in site_users:', data.role);
-        setUserRole(data.role);
-        return data.role;
-      } else {
-        console.log('Error fetching user role:', error);
-        // Set default role to 'member' if no record is found
-        setUserRole('member');
-        
-        // Optionally, create a record for this user
-        try {
-          const { error: insertError } = await supabase
-            .from('site_users')
-            .insert([{ email: user.email, role: 'member' }]);
-            
-          if (insertError) {
-            console.log('Error creating user record:', insertError);
-          } else {
-            console.log('Created new site_users record with member role');
-          }
-        } catch (e) {
-          console.error('Exception creating user record:', e);
-        }
-        
-        return 'member';
-      }
-    } catch (e) {
-      console.error('Exception in fetchUserRole:', e);
-      setUserRole('member');
-      return 'member';
-    }
-  };
-
-  const loadLocations = async () => {
-    console.log('Loading locations...');
-    try {
-      const locationsData = await fetchLocations();
-      setLocations(locationsData);
-      return locationsData;
-    } catch (error) {
-      console.error('Error loading locations:', error);
-      toast.error('Failed to load locations');
-      return [];
-    }
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleStartDateSelect = (date: Date | undefined) => {
-    if (date) {
-      setStartDate(date);
-      // Update the form data with the new date but keep the time
-      const currentStart = formData.start_time ? parseISO(formData.start_time) : new Date();
-      const newDate = new Date(date);
-      newDate.setHours(currentStart.getHours(), currentStart.getMinutes());
-      setFormData((prev) => ({
-        ...prev,
-        start_time: format(newDate, "yyyy-MM-dd'T'HH:mm:ssXXX")
-      }));
-    }
-  };
-
-  const handleEndDateSelect = (date: Date | undefined) => {
-    if (date) {
-      setEndDate(date);
-      // Update the form data with the new date but keep the time
-      const currentEnd = formData.end_time ? parseISO(formData.end_time) : new Date();
-      const newDate = new Date(date);
-      newDate.setHours(currentEnd.getHours(), currentEnd.getMinutes());
-      setFormData((prev) => ({
-        ...prev,
-        end_time: format(newDate, "yyyy-MM-dd'T'HH:mm:ssXXX")
-      }));
-    }
-  };
-
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const timeField = name === 'startTime' ? 'start_time' : 'end_time';
-    const dateValue = timeField === 'start_time' ? startDate : endDate;
-
-    if (dateValue) {
-      const [hours, minutes] = value.split(':').map(Number);
-      const newDate = new Date(dateValue);
-      newDate.setHours(hours, minutes);
-      setFormData((prev) => ({
-        ...prev,
-        [timeField]: format(newDate, "yyyy-MM-dd'T'HH:mm:ssXXX")
-      }));
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    console.log('[DEBUG] handleSubmit: Submitting form with data:', formData);
+    if (!user?.id) {
+      toast.error('You must be logged in to perform this action');
+      return;
+    }
 
+    setIsSubmitting(true);
     try {
-      if (isNewEvent) {
-        console.log('[DEBUG] handleSubmit: Creating new event...');
-        const newEvent = await createEvent(formData);
-        console.log('[DEBUG] handleSubmit: Event created successfully:', newEvent);
-        toast.success('Event created successfully');
-        onEventCreated?.(newEvent);
-      } else if (event) {
-        console.log('[DEBUG] handleSubmit: Updating existing event...');
-        const updatedEvent = await updateEvent(event.id, formData);
-        console.log('[DEBUG] handleSubmit: Event updated successfully:', updatedEvent);
+      if (event) {
+        // Check if user has permission to edit
+        const isAdminOrWebmaster = ['admin', 'webmaster'].includes(role || '');
+        const isCreator = event.created_by === user.id;
+
+        if (!isAdminOrWebmaster && !isCreator) {
+          toast.error('You do not have permission to edit this event');
+          return;
+        }
+
+        const updatedEvent = await updateEvent(event.id, {
+          ...formData,
+          created_by: event.created_by // Keep the original creator
+        });
+        
+        if (onEventUpdated) onEventUpdated(updatedEvent);
         toast.success('Event updated successfully');
-        onEventUpdated?.(updatedEvent);
+      } else {
+        const newEvent = await createEvent({
+          ...formData,
+          created_by: user.id
+        });
+        
+        if (onEventCreated) onEventCreated(newEvent);
+        toast.success('Event created successfully');
       }
-      console.log('[DEBUG] handleSubmit: Closing editor');
       onClose();
     } catch (error) {
-      console.error('[DEBUG] handleSubmit: Error in handleSubmit:', error);
-      if (error instanceof Error) {
-        toast.error(`Failed to save event: ${error.message}`);
-      } else {
-        toast.error('Failed to save event');
-      }
+      console.error('Error submitting event:', error);
+      toast.error('Failed to save event');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!event?.id) return;
+    if (!event?.id || !user?.id || !siteUser?.id) return;
     
-    // Show the delete confirmation dialog instead of using window.confirm
+    const isAdminOrWebmaster = ['admin', 'webmaster'].includes(role || '');
+    const isCreator = event.created_by === siteUser.id;
+
+    if (!isAdminOrWebmaster && !isCreator) {
+      toast.error('You do not have permission to delete this event');
+      return;
+    }
+
     setShowDeleteConfirm(true);
   };
   
-  // Add a function to handle the actual deletion after confirmation
   const confirmDelete = async () => {
-    if (!event?.id) return;
+    if (!event?.id || !user?.id || !siteUser?.id) return;
     
-    setLoading(true);
-    console.log('[DEBUG] confirmDelete: Deleting event with ID:', event.id);
+    setIsSubmitting(true);
     try {
       await deleteEvent(event.id);
-      console.log('[DEBUG] confirmDelete: Event deleted successfully');
       toast.success('Event deleted successfully');
-      
-      // Close the delete confirmation dialog
-      setShowDeleteConfirm(false);
-      
-      // Notify parent component about deletion
-      onEventDeleted?.(event.id);
-      
-      console.log('[DEBUG] confirmDelete: Calling onClose');
+      if (onEventDeleted) onEventDeleted(event.id);
       onClose();
     } catch (error) {
-      console.error('[DEBUG] confirmDelete: Error deleting event:', error);
+      console.error('Error deleting event:', error);
       toast.error('Failed to delete event');
-      
-      // Close the delete confirmation dialog even on error
-      setShowDeleteConfirm(false);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
+      setShowDeleteConfirm(false);
     }
   };
   
-  // Add a function to cancel deletion
   const cancelDelete = () => {
     console.log('[DEBUG] cancelDelete: Canceling event deletion');
     setShowDeleteConfirm(false);
   };
 
   // Only admins and webmasters can modify location settings
-  const canEditLocations = ['admin', 'webmaster'].includes(userRole || '');
+  const canEditLocations = ['admin', 'webmaster'].includes(role || '');
 
-  // Only allow deletion if user is admin/webmaster or the event creator
-  const canDelete = 
-    event ? 
-    (['admin', 'webmaster'].includes(userRole || '') || (user?.id && user.id === event.created_by)) 
-    : false;
+  // Update the canDelete condition
+  const canDelete = event && (
+    ['admin', 'webmaster'].includes(role || '') || 
+    (siteUser?.id && event.created_by === siteUser.id)
+  );
 
   return (
     <>
@@ -332,9 +273,9 @@ export function EventEditor({
       >
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>{isNewEvent ? 'Create New Event' : 'Edit Event'}</DialogTitle>
+            <DialogTitle>{event ? 'Edit Event' : 'Create New Event'}</DialogTitle>
             <DialogDescription>
-              {isNewEvent ? 'Fill in the details to create a new event.' : 'Edit the event details below.'}
+              {event ? 'Edit the event details below.' : 'Fill in the details to create a new event.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -346,7 +287,7 @@ export function EventEditor({
                   id="title"
                   name="title"
                   value={formData.title}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                   required
                   ref={titleInputRef}
                   autoFocus
@@ -359,7 +300,7 @@ export function EventEditor({
                   id="description"
                   name="description"
                   value={formData.description}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                   className="min-h-[100px]"
                 />
               </div>
@@ -375,14 +316,25 @@ export function EventEditor({
                           className="w-full justify-start text-left font-normal"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {startDate ? format(startDate, 'PPP') : 'Pick a date'}
+                          {safeFormat(formData.start_time, 'PPP')}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
                         <Calendar
                           mode="single"
-                          selected={startDate}
-                          onSelect={handleStartDateSelect}
+                          selected={new Date(formData.start_time)}
+                          onSelect={(date) => {
+                            if (date) {
+                              const currentStart = new Date(formData.start_time);
+                              const newDate = new Date(date);
+                              newDate.setHours(currentStart.getHours());
+                              newDate.setMinutes(currentStart.getMinutes());
+                              setFormData((prev) => ({
+                                ...prev,
+                                start_time: newDate.toISOString()
+                              }));
+                            }
+                          }}
                           initialFocus
                         />
                       </PopoverContent>
@@ -396,8 +348,17 @@ export function EventEditor({
                     id="startTime"
                     name="startTime"
                     type="time"
-                    value={formData.start_time ? format(parseISO(formData.start_time), 'HH:mm') : ''}
-                    onChange={handleTimeChange}
+                    value={safeFormat(formData.start_time, 'HH:mm')}
+                    onChange={(e) => {
+                      const [hours, minutes] = e.target.value.split(':').map(Number);
+                      const newDate = new Date(formData.start_time);
+                      newDate.setHours(hours);
+                      newDate.setMinutes(minutes);
+                      setFormData((prev) => ({
+                        ...prev,
+                        start_time: newDate.toISOString()
+                      }));
+                    }}
                     required
                   />
                 </div>
@@ -414,14 +375,25 @@ export function EventEditor({
                           className="w-full justify-start text-left font-normal"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? format(endDate, 'PPP') : 'Pick a date'}
+                          {safeFormat(formData.end_time, 'PPP')}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
                         <Calendar
                           mode="single"
-                          selected={endDate}
-                          onSelect={handleEndDateSelect}
+                          selected={new Date(formData.end_time)}
+                          onSelect={(date) => {
+                            if (date) {
+                              const currentEnd = new Date(formData.end_time);
+                              const newDate = new Date(date);
+                              newDate.setHours(currentEnd.getHours());
+                              newDate.setMinutes(currentEnd.getMinutes());
+                              setFormData((prev) => ({
+                                ...prev,
+                                end_time: newDate.toISOString()
+                              }));
+                            }
+                          }}
                           initialFocus
                         />
                       </PopoverContent>
@@ -435,8 +407,17 @@ export function EventEditor({
                     id="endTime"
                     name="endTime"
                     type="time"
-                    value={formData.end_time ? format(parseISO(formData.end_time), 'HH:mm') : ''}
-                    onChange={handleTimeChange}
+                    value={safeFormat(formData.end_time, 'HH:mm')}
+                    onChange={(e) => {
+                      const [hours, minutes] = e.target.value.split(':').map(Number);
+                      const newDate = new Date(formData.end_time);
+                      newDate.setHours(hours);
+                      newDate.setMinutes(minutes);
+                      setFormData((prev) => ({
+                        ...prev,
+                        end_time: newDate.toISOString()
+                      }));
+                    }}
                     required
                   />
                 </div>
@@ -446,12 +427,17 @@ export function EventEditor({
                 <Label htmlFor="location_id">Location</Label>
                 <Select
                   name="location_id"
-                  value={formData.location_id}
-                  onValueChange={(value) => handleSelectChange('location_id', value)}
-                  disabled={false}
+                  value={formData.location_id || undefined}
+                  onValueChange={(value) => {
+                    console.log('Selected location:', value);
+                    setFormData((prev) => ({ ...prev, location_id: value }));
+                  }}
+                  required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a location" />
+                    <SelectValue placeholder="Select a location">
+                      {locations.find(loc => loc.id === formData.location_id)?.name}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {locations.map((location) => (
@@ -469,9 +455,7 @@ export function EventEditor({
                   id="is_public"
                   name="is_public"
                   checked={formData.is_public}
-                  onChange={(e) => 
-                    setFormData((prev) => ({ ...prev, is_public: e.target.checked }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, is_public: e.target.checked }))}
                   className="h-4 w-4"
                 />
                 <Label htmlFor="is_public">Make this event public</Label>
@@ -479,12 +463,12 @@ export function EventEditor({
             </div>
 
             <DialogFooter className="flex justify-between">
-              {!isNewEvent && canDelete && (
+              {event && canDelete && (
                 <Button
                   type="button"
                   variant="destructive"
                   onClick={handleDelete}
-                  disabled={loading}
+                  disabled={isSubmitting}
                 >
                   <Trash className="mr-2 h-4 w-4" />
                   Delete
@@ -498,8 +482,8 @@ export function EventEditor({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Saving...' : isNewEvent ? 'Create' : 'Update'}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : event ? 'Update' : 'Create'}
                 </Button>
               </div>
             </DialogFooter>
@@ -536,8 +520,8 @@ export function EventEditor({
             <Button variant="outline" onClick={cancelDelete}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete} disabled={loading}>
-              {loading ? 'Deleting...' : 'Delete Event'}
+            <Button variant="destructive" onClick={confirmDelete} disabled={isSubmitting}>
+              {isSubmitting ? 'Deleting...' : 'Delete Event'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -145,7 +145,10 @@ export const updateEvent = async (id: string, formData: EventFormData): Promise<
     // Get the current event to get the Google Calendar event ID
     const { data: currentEvent, error: fetchError } = await supabase
       .from('events')
-      .select('*')
+      .select(`
+        *,
+        location:locations(*)
+      `)
       .eq('id', id)
       .single();
       

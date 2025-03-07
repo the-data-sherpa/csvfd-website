@@ -1,0 +1,632 @@
+[
+    {
+      "table_name": "announcements",
+      "column_name": "content",
+      "is_nullable": "YES",
+      "data_type": "text",
+      "primary_key": "announcements_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "created_at",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "announcements_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "created_by",
+      "is_nullable": "YES",
+      "data_type": "text",
+      "primary_key": "announcements_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "data_type": "uuid",
+      "primary_key": "announcements_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "published",
+      "is_nullable": "YES",
+      "data_type": "boolean",
+      "primary_key": "announcements_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "title",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "announcements_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "announcements",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "announcements_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "created_at",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "events_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "created_by",
+      "is_nullable": "YES",
+      "data_type": "uuid",
+      "primary_key": "events_pkey",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "events",
+      "column_name": "description",
+      "is_nullable": "YES",
+      "data_type": "text",
+      "primary_key": "events_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "end_time",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "events_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "gcal_event_id",
+      "is_nullable": "YES",
+      "data_type": "text",
+      "primary_key": "events_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "data_type": "uuid",
+      "primary_key": "events_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "is_public",
+      "is_nullable": "NO",
+      "data_type": "boolean",
+      "primary_key": "events_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "location_id",
+      "is_nullable": "YES",
+      "data_type": "uuid",
+      "primary_key": "events_pkey",
+      "foreign_table_name": "locations",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "events",
+      "column_name": "start_time",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "events_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "title",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "events_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "events",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "events_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "locations",
+      "column_name": "created_at",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "locations_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "locations",
+      "column_name": "description",
+      "is_nullable": "YES",
+      "data_type": "text",
+      "primary_key": "locations_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "locations",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "data_type": "uuid",
+      "primary_key": "locations_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "locations",
+      "column_name": "name",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "locations_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "locations",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "locations_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "monthly_call_stats",
+      "column_name": "created_at",
+      "is_nullable": "YES",
+      "data_type": "timestamp with time zone",
+      "primary_key": "monthly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "monthly_call_stats",
+      "column_name": "fires",
+      "is_nullable": "NO",
+      "data_type": "integer",
+      "primary_key": "monthly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "monthly_call_stats",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "data_type": "uuid",
+      "primary_key": "monthly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "monthly_call_stats",
+      "column_name": "medical",
+      "is_nullable": "NO",
+      "data_type": "integer",
+      "primary_key": "monthly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "monthly_call_stats",
+      "column_name": "month",
+      "is_nullable": "NO",
+      "data_type": "integer",
+      "primary_key": "monthly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "monthly_call_stats",
+      "column_name": "updated_at",
+      "is_nullable": "YES",
+      "data_type": "timestamp with time zone",
+      "primary_key": "monthly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "monthly_call_stats",
+      "column_name": "year",
+      "is_nullable": "NO",
+      "data_type": "integer",
+      "primary_key": "monthly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "content",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "created_at",
+      "is_nullable": "YES",
+      "data_type": "timestamp with time zone",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "data_type": "uuid",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "meta_description",
+      "is_nullable": "YES",
+      "data_type": "text",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "meta_keywords",
+      "is_nullable": "YES",
+      "data_type": "text",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "order",
+      "is_nullable": "YES",
+      "data_type": "integer",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "published",
+      "is_nullable": "YES",
+      "data_type": "boolean",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "section",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "slug",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "title",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "pages",
+      "column_name": "updated_at",
+      "is_nullable": "YES",
+      "data_type": "timestamp with time zone",
+      "primary_key": "pages_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "allow_notes",
+      "is_nullable": "YES",
+      "data_type": "boolean",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "allow_removal",
+      "is_nullable": "YES",
+      "data_type": "boolean",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "calendar_id",
+      "is_nullable": "YES",
+      "data_type": "uuid",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": "events",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "created_at",
+      "is_nullable": "YES",
+      "data_type": "timestamp with time zone",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "created_by",
+      "is_nullable": "YES",
+      "data_type": "uuid",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "display_slot_numbers",
+      "is_nullable": "YES",
+      "data_type": "boolean",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "end_time",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "event_date",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "groups",
+      "is_nullable": "NO",
+      "data_type": "jsonb",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "data_type": "uuid",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "location_id",
+      "is_nullable": "YES",
+      "data_type": "text",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "memo",
+      "is_nullable": "YES",
+      "data_type": "text",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "point_of_contact",
+      "is_nullable": "NO",
+      "data_type": "ARRAY",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "push_to_calendar",
+      "is_nullable": "YES",
+      "data_type": "boolean",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "sign_up_by",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "start_time",
+      "is_nullable": "NO",
+      "data_type": "timestamp with time zone",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "status",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "title",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "signup_sheets",
+      "column_name": "updated_at",
+      "is_nullable": "YES",
+      "data_type": "timestamp with time zone",
+      "primary_key": "signup_sheets_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "site_users",
+      "column_name": "authid",
+      "is_nullable": "YES",
+      "data_type": "uuid",
+      "primary_key": "site_users_pkey",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "site_users",
+      "column_name": "created_at",
+      "is_nullable": "YES",
+      "data_type": "timestamp with time zone",
+      "primary_key": "site_users_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "site_users",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "data_type": "uuid",
+      "primary_key": "site_users_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "site_users",
+      "column_name": "name",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "site_users_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "site_users",
+      "column_name": "role",
+      "is_nullable": "NO",
+      "data_type": "text",
+      "primary_key": "site_users_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "yearly_call_stats",
+      "column_name": "created_at",
+      "is_nullable": "YES",
+      "data_type": "timestamp with time zone",
+      "primary_key": "yearly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "yearly_call_stats",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "data_type": "uuid",
+      "primary_key": "yearly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "yearly_call_stats",
+      "column_name": "total_calls",
+      "is_nullable": "NO",
+      "data_type": "integer",
+      "primary_key": "yearly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "yearly_call_stats",
+      "column_name": "updated_at",
+      "is_nullable": "YES",
+      "data_type": "timestamp with time zone",
+      "primary_key": "yearly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    },
+    {
+      "table_name": "yearly_call_stats",
+      "column_name": "year",
+      "is_nullable": "NO",
+      "data_type": "integer",
+      "primary_key": "yearly_call_stats_pkey",
+      "foreign_table_name": null,
+      "foreign_column_name": null
+    }
+  ]
