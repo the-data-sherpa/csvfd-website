@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Layout, FileText, Bell, Mail, Shield, ClipboardList } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { Layout, FileText, Bell, Mail, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { BookingCalendar } from '../components/BookingCalendar';
 import { SignUpSheetList } from '../components/SignUpSheet';
+import { Announcements, AnnouncementsRef } from '../components/Announcements';
 
 export function MembersArea() {
   const { role } = useAuth();
+  const announcementsRef = useRef<AnnouncementsRef>(null);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -27,7 +28,7 @@ export function MembersArea() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
           {/* Documents Card */}
           <a 
             href="https://drive.google.com/drive/folders/0AFMSxShEVntDUk9PVA"
@@ -99,8 +100,13 @@ export function MembersArea() {
           )}
         </div>
 
+        {/* Member Announcements Section */}
+        <div className="mt-8">
+          <Announcements ref={announcementsRef} />
+        </div>
+
         {/* Sign-up Sheets Section */}
-        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+        <div id="signup-sheets" className="mt-8 bg-white rounded-lg shadow-md p-6">
           <SignUpSheetList />
         </div>
 
