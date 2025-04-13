@@ -4,11 +4,19 @@ This is the official website for the Cool Springs Volunteer Fire Department. Bui
 
 ## Features
 
-- Modern, responsive design
+- Modern, responsive design optimized for all devices
 - Content Management System (CMS) for department members
-- Google Authentication for member access
-- Dynamic page creation and editing
-- Rich text editing capabilities
+- Google Authentication for secure member access
+- Dynamic page creation and editing with rich text capabilities
+- Call statistics tracking and visualization with Chart.js
+- Interactive event calendar with FullCalendar integration
+- Weather information display
+- Live Facebook feed integration
+- Booking calendar for facility reservations
+- Volunteer sign-up system with automated confirmations
+- Announcements management system
+- Member application form with multi-step process
+- Admin dashboard for site management
 - SEO optimization for all pages
 
 ## Tech Stack
@@ -17,9 +25,19 @@ This is the official website for the Cool Springs Volunteer Fire Department. Bui
 - TypeScript
 - Tailwind CSS
 - Vite
-- Supabase
-- CKEditor 5
+- Supabase (Database and Authentication)
+- CKEditor 5 (Rich Text Editing)
+- FullCalendar (Event Calendar)
+- Chart.js (Data Visualization)
+- React Router DOM (Routing)
+- Framer Motion (Animations)
 - Google OAuth 2.0
+- React Hot Toast (Notifications)
+- Date-fns (Date Utilities)
+- Radix UI (Accessible UI Components)
+- Lucide React (Icons)
+- Tailwind CSS Typography
+- Google Maps API Integration
 
 ## Getting Started
 
@@ -44,10 +62,14 @@ This is the official website for the Cool Springs Volunteer Fire Department. Bui
 
 - `/src` - Source code
   - `/components` - Reusable React components
+    - `/ui` - UI components
+    - `/application-steps` - Application form steps
   - `/contexts` - React context providers
   - `/lib` - Utility functions and configurations
   - `/pages` - Page components
+  - `/services` - API and service integrations
   - `/types` - TypeScript type definitions
+  - `/styles` - CSS and style definitions
 
 ## Contributing
 

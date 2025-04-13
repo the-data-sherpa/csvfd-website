@@ -17,12 +17,7 @@ export function MembersArea() {
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Members Area</h2>
-            <div className="flex items-center space-x-4">
-              <Bell className="w-5 h-5" />
-              <div className="h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center">
-                <span className="text-sm">JD</span>
-              </div>
-            </div>
+            
           </div>
         </div>
       </nav>
