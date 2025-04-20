@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Calendar } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { Loading, Skeleton } from './ui/Loading';
 
 interface Announcement {
   id: string;
@@ -61,8 +62,30 @@ export function AnnouncementsDisplay() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+        
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="border-b border-gray-200 pb-6 last:border-0">
+              <div className="flex items-center space-x-4 mb-4">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div>
+                  <Skeleton className="h-6 w-48 mb-2" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

@@ -5,6 +5,7 @@ import { MedicalHistoryStep } from '../components/application-steps/MedicalHisto
 import { AvailabilityStep } from '../components/application-steps/AvailabilityStep';
 import { ReferencesStep } from '../components/application-steps/ReferencesStep';
 import { ReviewStep, openPrintView, PrintLayout } from '../components/application-steps/ReviewStep';
+import { Loading, Skeleton } from '../components/ui/Loading';
 
 export interface ApplicationFormData {
   // Fire Department use only section
@@ -354,9 +355,10 @@ export function ApplicationForm() {
     acknowledgeVerification: false,
     acknowledgeBackgroundCheck: false
   });
-
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const totalSteps = 6;
   const steps = [
@@ -417,7 +419,14 @@ export function ApplicationForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add validation and submission logic
+    setSubmitting(true);
+    try {
+      // ... existing submission logic ...
+    } catch (error) {
+      console.error('Error submitting application:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleBlur = (fieldName: string) => {
@@ -441,6 +450,34 @@ export function ApplicationForm() {
   const handlePrint = () => {
     openPrintView(formData);
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-32" />
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+        </div>
+        
+        <div className="space-y-6">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="border-b border-gray-200 pb-6 last:border-0">
+              <Skeleton className="h-6 w-48 mb-4" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -572,6 +609,14 @@ export function ApplicationForm() {
       <div className="hidden">
         <PrintLayout formData={formData} />
       </div>
+      {submitting && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+            <Loading type="spinner" className="mb-4" />
+            <p className="text-center text-gray-600">Submitting application...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

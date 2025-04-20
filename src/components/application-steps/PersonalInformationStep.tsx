@@ -1,6 +1,7 @@
 import { ApplicationFormData } from '../../pages/ApplicationForm';
 import { usePlacesWidget } from "react-google-autocomplete";
 import { useState } from 'react';
+import { Loading, Skeleton } from '../ui/Loading';
 
 interface PersonalInformationStepProps {
   formData: ApplicationFormData;
@@ -12,6 +13,7 @@ interface PersonalInformationStepProps {
     [key: string]: boolean;
   };
   onBlur: (fieldName: string) => void;
+  loading?: boolean;
 }
 
 export function PersonalInformationStep({ 
@@ -19,16 +21,20 @@ export function PersonalInformationStep({
   onChange, 
   errors,
   touched,
-  onBlur 
+  onBlur,
+  loading = false
 }: PersonalInformationStepProps) {
   const [addressError, setAddressError] = useState('');
   const [previousAddressError, setPreviousAddressError] = useState('');
+  const [addressLoading, setAddressLoading] = useState(false);
+  const [previousAddressLoading, setPreviousAddressLoading] = useState(false);
 
   const { ref } = usePlacesWidget({
     apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     onPlaceSelected: (place) => {
       try {
         setAddressError('');
+        setAddressLoading(true);
         if (!place || !place.address_components) {
           throw new Error('Failed to load address suggestions');
         }
@@ -78,6 +84,8 @@ export function PersonalInformationStep({
       } catch (error) {
         setAddressError(error instanceof Error ? error.message : 'Failed to process address');
         console.error('Places API Error:', error);
+      } finally {
+        setAddressLoading(false);
       }
     },
     options: {
@@ -91,6 +99,7 @@ export function PersonalInformationStep({
     onPlaceSelected: (place) => {
       try {
         setPreviousAddressError('');
+        setPreviousAddressLoading(true);
         if (!place || !place.address_components) {
           throw new Error('Failed to load address suggestions');
         }
@@ -126,6 +135,8 @@ export function PersonalInformationStep({
       } catch (error) {
         setPreviousAddressError(error instanceof Error ? error.message : 'Failed to process address');
         console.error('Places API Error:', error);
+      } finally {
+        setPreviousAddressLoading(false);
       }
     },
     options: {
@@ -133,6 +144,33 @@ export function PersonalInformationStep({
       componentRestrictions: { country: 'us' }
     }
   });
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+        </div>
+        <Skeleton className="h-10" />
+        <Skeleton className="h-10" />
+        <Skeleton className="h-10" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+        </div>
+      </div>
+    );
+  }
 
   const showError = (fieldName: string) => {
     return touched[fieldName] && errors[fieldName] ? (
@@ -214,21 +252,27 @@ export function PersonalInformationStep({
         <label htmlFor="currentAddress" className="block text-sm font-medium text-gray-700">
           Current Address
         </label>
-        <input
-          ref={ref as unknown as React.LegacyRef<HTMLInputElement>}
-          type="text" 
-          id="currentAddress"
-          name="currentAddress"
-          placeholder="Start typing your address..."
-          className={`mt-1 block w-full rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 
-            ${touched.currentAddress && errors.currentAddress ? 'border-red-300' : 'border-gray-300'}`}
-        />
+        <div className="relative">
+          <input
+            ref={ref as unknown as React.LegacyRef<HTMLInputElement>}
+            type="text" 
+            id="currentAddress"
+            name="currentAddress"
+            placeholder="Start typing your address..."
+            className={`mt-1 block w-full rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 
+              ${touched.currentAddress && errors.currentAddress ? 'border-red-300' : 'border-gray-300'}`}
+          />
+          {addressLoading && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <Loading type="spinner" className="h-5 w-5" />
+            </div>
+          )}
+        </div>
         {addressError && (
           <p className="mt-1 text-sm text-red-600">{addressError}</p>
         )}
       </div>
 
-      {/* Years at Current Address */}
       <div>
         <label htmlFor="yearsAtCurrentAddress" className="block text-sm font-medium text-gray-700">
           Years at Current Address
@@ -246,26 +290,31 @@ export function PersonalInformationStep({
         {showError('yearsAtCurrentAddress')}
       </div>
 
-      {/* Previous Address */}
       <div>
         <label htmlFor="previousAddress" className="block text-sm font-medium text-gray-700">
           Previous Address
         </label>
-        <input
-          ref={previousAddressRef as unknown as React.LegacyRef<HTMLInputElement>}
-          type="text"
-          id="previousAddress"
-          name="previousAddress"
-          placeholder="Start typing your previous address..."
-          className={`mt-1 block w-full rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 
-            ${touched.previousAddress && errors.previousAddress ? 'border-red-300' : 'border-gray-300'}`}
-        />
+        <div className="relative">
+          <input
+            ref={previousAddressRef as unknown as React.LegacyRef<HTMLInputElement>}
+            type="text"
+            id="previousAddress"
+            name="previousAddress"
+            placeholder="Start typing your previous address..."
+            className={`mt-1 block w-full rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 
+              ${touched.previousAddress && errors.previousAddress ? 'border-red-300' : 'border-gray-300'}`}
+          />
+          {previousAddressLoading && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <Loading type="spinner" className="h-5 w-5" />
+            </div>
+          )}
+        </div>
         {previousAddressError && (
           <p className="mt-1 text-sm text-red-600">{previousAddressError}</p>
         )}
       </div>
 
-      {/* Phone Numbers */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="cellPhone" className="block text-sm font-medium text-gray-700">
@@ -301,7 +350,6 @@ export function PersonalInformationStep({
         </div>
       </div>
 
-      {/* Social Security and Driver's License */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="socialSecurity" className="block text-sm font-medium text-gray-700">
@@ -337,7 +385,6 @@ export function PersonalInformationStep({
         </div>
       </div>
 
-      {/* Personal Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
@@ -377,7 +424,6 @@ export function PersonalInformationStep({
         </div>
       </div>
 
-      {/* Citizenship and Education */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="citizenship" className="block text-sm font-medium text-gray-700">
@@ -413,7 +459,6 @@ export function PersonalInformationStep({
         </div>
       </div>
 
-      {/* Marital Status and Family */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label htmlFor="maritalStatus" className="block text-sm font-medium text-gray-700">
@@ -472,4 +517,4 @@ export function PersonalInformationStep({
       </div>
     </div>
   );
-} 
+}
