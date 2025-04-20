@@ -1,4 +1,6 @@
 import { ApplicationFormData } from '../../pages/ApplicationForm';
+import { Loading, Skeleton } from '../ui/Loading';
+import { useState } from 'react';
 
 interface MedicalHistoryStepProps {
   formData: ApplicationFormData;
@@ -10,14 +12,53 @@ interface MedicalHistoryStepProps {
     [key: string]: boolean;
   };
   onBlur: (fieldName: string) => void;
+  loading?: boolean;
 }
 
-export function MedicalHistoryStep({ formData, onChange, errors, touched, onBlur }: MedicalHistoryStepProps) {
+export function MedicalHistoryStep({ formData, onChange, errors, touched, onBlur, loading = false }: MedicalHistoryStepProps) {
+  const [validating, setValidating] = useState<string | null>(null);
+
   const showError = (fieldName: string) => {
     return touched[fieldName] && errors[fieldName] ? (
       <p className="mt-1 text-sm text-red-600">{errors[fieldName]}</p>
     ) : null;
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <Skeleton className="h-6 w-48 mb-4" />
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-3">
+                <div className="flex items-start">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-5 w-64 ml-3" />
+                </div>
+                <Skeleton className="h-20 w-full ml-8" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <Skeleton className="h-6 w-48 mb-4" />
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="space-y-3">
+                <div className="flex items-start">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-5 w-64 ml-3" />
+                </div>
+                <Skeleton className="h-20 w-full ml-8" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const medicalQuestions = [
     {
@@ -65,6 +106,21 @@ export function MedicalHistoryStep({ formData, onChange, errors, touched, onBlur
     }
   ];
 
+  const handleCheckboxChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    onChange(e);
+    
+    if (checked) {
+      setValidating(name);
+      try {
+        // Simulate validation delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } finally {
+        setValidating(null);
+      }
+    }
+  };
+
   const renderQuestionWithDetails = (question: { id: string; text: string; detailsId: string | null }) => (
     <div key={question.id} className="space-y-3">
       <div className="flex items-start">
@@ -74,7 +130,7 @@ export function MedicalHistoryStep({ formData, onChange, errors, touched, onBlur
             id={question.id}
             name={question.id}
             checked={formData[question.id as keyof ApplicationFormData] as boolean}
-            onChange={onChange}
+            onChange={handleCheckboxChange}
             onBlur={() => onBlur(question.id)}
             className="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300 rounded"
           />
@@ -85,6 +141,11 @@ export function MedicalHistoryStep({ formData, onChange, errors, touched, onBlur
           </label>
           {showError(question.id)}
         </div>
+        {validating === question.id && (
+          <div className="ml-2">
+            <Loading type="spinner" className="h-4 w-4" />
+          </div>
+        )}
       </div>
       {question.detailsId && formData[question.id as keyof ApplicationFormData] && (
         <div className="ml-7">
@@ -93,7 +154,7 @@ export function MedicalHistoryStep({ formData, onChange, errors, touched, onBlur
             name={question.detailsId}
             value={formData[question.detailsId as keyof ApplicationFormData] as string}
             onChange={onChange}
-            onBlur={() => onBlur(question.detailsId)}
+            onBlur={() => question.detailsId && onBlur(question.detailsId)}
             rows={3}
             placeholder="Please provide details..."
             className={`mt-1 block w-full rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 
