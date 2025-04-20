@@ -35,7 +35,6 @@ A modern web application for the Cool Springs Volunteer Fire Department, built w
 
 ### In Progress
 - UX-002: Form validation with real-time feedback
-- PERF-001: Code splitting and lazy loading
 - SEC-001: Rate limiting for API endpoints
 
 ## Getting Started

@@ -25,7 +25,6 @@ This document outlines the planned enhancements for the CSVFD website, focusing 
 - [ ] UX-006: Implement dark mode support
 
 ### 2. Performance (PERF)
-- [ ] PERF-001: Implement code splitting and lazy loading
 - [ ] PERF-002: Optimize image loading and caching
 - [ ] PERF-003: Add service worker for offline support
 - [ ] PERF-004: Implement performance monitoring
@@ -64,8 +63,7 @@ This document outlines the planned enhancements for the CSVFD website, focusing 
 ### Phase 1: Foundation (Weeks 1-2)
 1. [x] UX-001: Loading States
 2. [ ] UX-002: Form Validation
-3. [ ] PERF-001: Code Splitting
-4. [ ] SEC-001: Rate Limiting
+3. [ ] SEC-001: Rate Limiting
 
 ### Phase 2: Core Features (Weeks 3-4)
 1. [ ] FEAT-001: Member Dashboard
