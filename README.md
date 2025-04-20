@@ -1,62 +1,65 @@
-# Cool Springs VFD Website
+# CSVFD Website
 
-This is the official website for the Cool Springs Volunteer Fire Department. Built with React, TypeScript, and Tailwind CSS.
+A modern web application for the Cool Springs Volunteer Fire Department, built with React, TypeScript, and Supabase.
 
 ## Features
 
-- Modern, responsive design
-- Content Management System (CMS) for department members
-- Google Authentication for member access
-- Dynamic page creation and editing
-- Rich text editing capabilities
-- SEO optimization for all pages
+- Member management system
+- Event calendar
+- Weather information
+- Facebook feed integration
+- Announcements display
+- Call statistics
+- Application form
+- Admin dashboard
 
 ## Tech Stack
 
-- React 18
-- TypeScript
-- Tailwind CSS
-- Vite
-- Supabase
-- CKEditor 5
-- Google OAuth 2.0
+- Frontend: React with TypeScript
+- Styling: Tailwind CSS
+- State Management: React Context + Local State
+- Backend: Supabase
+- Authentication: Supabase Auth
+- Forms: React Hook Form + Yup
+- Maps: Google Maps API
+- Weather: OpenWeatherMap API
+- Social Media: Facebook Graph API
+
+## Recent Updates
+
+### Completed Enhancements
+- ✅ UX-001: Added loading states and skeleton screens for all components
+  - Implemented in WeatherInfo, FacebookFeed, AnnouncementsDisplay, CallStatistics
+  - Added to AdminDashboard for user data and role updates
+  - Enhanced ApplicationForm steps with loading states and validation indicators
+
+### In Progress
+- UX-002: Form validation with real-time feedback
+- PERF-001: Code splitting and lazy loading
+- SEC-001: Rate limiting for API endpoints
 
 ## Getting Started
 
 1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create a `.env` file with the following variables:
-   ```
-   VITE_SUPABASE_ANON_KEY=your_anon_key
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_GOOGLE_CLIENT_ID=your_google_client_id
-   VITE_GOOGLE_CLIENT_SECRET=your_google_client_secret
-   ```
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
+2. Install dependencies: `npm install`
+3. Set up environment variables (see `.env.example`)
+4. Start development server: `npm run dev`
 
-## Project Structure
+## Development
 
-- `/src` - Source code
-  - `/components` - Reusable React components
-  - `/contexts` - React context providers
-  - `/lib` - Utility functions and configurations
-  - `/pages` - Page components
-  - `/types` - TypeScript type definitions
+- Follow the enhancement plan in `plan.md`
+- Use feature branches for new enhancements
+- Follow the established coding standards
+- Update documentation as needed
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
+1. Create a feature branch
+2. Make your changes
+3. Submit a pull request
+4. Ensure all tests pass
+5. Update documentation if needed
 
 ## License
 
-MIT License - See LICENSE file for details
+MIT License - see LICENSE file for details
