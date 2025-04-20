@@ -171,7 +171,7 @@ export function SignUpSheetList() {
   const displayedSheets = activeTab === 'current' ? signupSheets : pastSignupSheets;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 signup-sheet-list">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Sign Up Sheets</h2>
         {(role === 'admin' || role === 'webmaster' || role === 'member') && activeTab === 'current' && (
@@ -541,6 +541,10 @@ function SignUpSheetForm({ onSubmit }: { onSubmit: () => void }) {
     memo: '',
     groups: []
   });
+  
+  // Add state for announcement creation
+  const [createAnnouncement, setCreateAnnouncement] = useState(false);
+  const [announcementExpiryDate, setAnnouncementExpiryDate] = useState('');
 
   const [currentGroup, setCurrentGroup] = useState({
     name: '',
@@ -556,6 +560,18 @@ function SignUpSheetForm({ onSubmit }: { onSubmit: () => void }) {
     fetchMembers();
     fetchLocations();
   }, []);
+
+  // Calculate minimum date for announcement expiration (tomorrow)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minExpiryDate = tomorrow.toISOString().split('T')[0];
+  
+  // Default expiration date for announcement (event date)
+  useEffect(() => {
+    if (formData.eventDate) {
+      setAnnouncementExpiryDate(formData.eventDate);
+    }
+  }, [formData.eventDate]);
 
   const fetchMembers = async () => {
     try {
@@ -600,6 +616,11 @@ function SignUpSheetForm({ onSubmit }: { onSubmit: () => void }) {
     try {
       if (!user?.id) {
         throw new Error('No user found');
+      }
+
+      // Validate announcement expiry date if creating announcement
+      if (createAnnouncement && !announcementExpiryDate) {
+        throw new Error('Please select an expiration date for the announcement');
       }
 
       // Get the site_user record using the auth ID
@@ -693,6 +714,43 @@ function SignUpSheetForm({ onSubmit }: { onSubmit: () => void }) {
         .single();
 
       if (error) throw error;
+      
+      // If user opted to create an announcement, create it now
+      if (createAnnouncement) {
+        const formattedDate = formatInTimeZone(eventDate, TIMEZONE, 'MMM d, yyyy h:mm a');
+        const formattedEndTime = formatInTimeZone(endDate, TIMEZONE, 'h:mm a');
+        const locationText = locationName ? ` at ${locationName}` : '';
+        
+        // Create HTML content for better formatting
+        const announcementContent = 
+          `<p><strong>A new sign-up sheet has been created!</strong></p>` +
+          `<p><strong>Event:</strong> ${formData.title}</p>` +
+          `<p><strong>Date:</strong> ${formattedDate} - ${formattedEndTime}${locationText}</p>` +
+          `<p><strong>Sign up by:</strong> ${formatInTimeZone(signUpByDate, TIMEZONE, 'MMM d, yyyy')}</p>` +
+          (formData.memo ? `<p><strong>Additional information:</strong> ${formData.memo}</p>` : '') + 
+          `<p class="mt-4"><a href="#signup-sheets" onclick="document.getElementById('signup-sheets').scrollIntoView({behavior: 'smooth'}); return false;" 
+           style="display: inline-block; padding: 8px 16px; background-color: #3490dc; color: white; text-decoration: none; border-radius: 4px;">
+           View & Sign Up</a></p>`;
+          
+        const { error: announcementError } = await supabase.from('member_announcements').insert([
+          {
+            title: `New Sign-Up Sheet: ${formData.title}`,
+            content: announcementContent,
+            expires_at: new Date(announcementExpiryDate).toISOString(),
+            user_id: user.id,
+            created_by: user.email
+          }
+        ]);
+        
+        if (announcementError) {
+          console.error('Error creating announcement:', announcementError);
+          toast.error('Sign-up sheet created but failed to create announcement');
+        } else {
+          toast.success('Sign-up sheet and announcement created successfully');
+        }
+      } else {
+        toast.success('Sign-up sheet created successfully');
+      }
 
       console.log('Created signup sheet:', signupSheet);
       onSubmit();
@@ -969,6 +1027,41 @@ function SignUpSheetForm({ onSubmit }: { onSubmit: () => void }) {
           value={formData.memo}
           onChange={e => setFormData(prev => ({ ...prev, memo: e.target.value }))}
         />
+      </div>
+
+      {/* Add announcement creation option */}
+      <div className="pt-4 border-t">
+        <div className="flex items-center mb-3">
+          <input
+            type="checkbox"
+            id="createAnnouncement"
+            className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+            checked={createAnnouncement}
+            onChange={e => setCreateAnnouncement(e.target.checked)}
+          />
+          <label htmlFor="createAnnouncement" className="ml-2 text-sm font-medium text-gray-700">
+            Create a member announcement for this sign-up sheet
+          </label>
+        </div>
+        
+        {createAnnouncement && (
+          <div className="ml-6 mt-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Announcement Expiration Date
+            </label>
+            <input
+              type="date"
+              min={minExpiryDate}
+              value={announcementExpiryDate}
+              onChange={e => setAnnouncementExpiryDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+              required={createAnnouncement}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              The announcement will be automatically hidden after this date. By default, it expires on the event date.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
