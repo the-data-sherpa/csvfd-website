@@ -5,6 +5,7 @@ A modern web application for the Cool Springs Volunteer Fire Department, built w
 ## Features
 
 
+
 ## Getting Started
 
 1. Clone the repository
