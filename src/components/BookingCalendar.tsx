@@ -13,6 +13,7 @@ import { toast, Toaster } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
+import { formatDateTimeForDisplay, formatDateForDisplay, formatTimeForDisplay, DATE_FORMATS, formatDateTime } from '../utils/dateUtils';
 
 // Add styles as a CSS module or in your global CSS file
 const calendarStyles = `
@@ -109,6 +110,13 @@ export function BookingCalendar() {
 
   // Add a state variable to track the last event deletion time
   const [lastEventDeletion, setLastEventDeletion] = useState<number | null>(null);
+
+  // Define formatEventTime function at component level so it's available everywhere in the component
+  const formatEventTime = (event: any) => {
+    const start = new Date(event.start);
+    const end = new Date(event.end);
+    return `${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end)}`;
+  };
 
   useEffect(() => {
     loadData();
@@ -333,7 +341,7 @@ export function BookingCalendar() {
       <div className="fire-dept-event-content p-1">
         <div className="flex items-center gap-1 text-xs font-medium mb-1">
           <Clock className="w-3 h-3" />
-          <span>{timeText}</span>
+          <span>{formatEventTime(eventInfo.event)}</span>
         </div>
         <div className="flex items-center gap-1 font-semibold">
           <Flame className="w-3 h-3" />
@@ -345,6 +353,24 @@ export function BookingCalendar() {
         </div>
       </div>
     );
+  };
+
+  // If there's a function like this in the component:
+  const formatDisplayDate = (date: Date) => {
+    // Replace with our utility function
+    return formatDateForDisplay(date);
+  };
+
+  // Similarly, if there's a function for formatting date and time:
+  const formatDisplayDateTime = (date: Date) => {
+    // Replace with our utility function
+    return formatDateTimeForDisplay(date);
+  };
+
+  // If there are any other date formatting functions, replace them with appropriate utility functions:
+  const formatFullDateTime = (date: Date) => {
+    // Replace with our standardized formatting
+    return formatDateTime(date, DATE_FORMATS.DISPLAY_DATETIME);
   };
 
   useEffect(() => {
@@ -451,7 +477,7 @@ export function BookingCalendar() {
                 <div className="font-medium">Time:</div>
                 <div>
                   {viewEvent ? (
-                    `${new Date(viewEvent.start_time).toLocaleString()} - ${new Date(viewEvent.end_time).toLocaleString()}`
+                    `${formatEventTime(viewEvent)}`
                   ) : (
                     'Not specified'
                   )}

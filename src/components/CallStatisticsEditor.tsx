@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { supabase, getSupabaseClient } from '../lib/supabase';
 import { MonthlyCallStat, YearlyCallStat } from '../types/database';
-import { BarChart2, Calendar, Save } from 'lucide-react';
+import { BarChart2, Calendar, Save, Plus, X } from 'lucide-react';
+import { formatDateForDisplay } from '../utils';
 
 const currentYear = new Date().getFullYear();
 
 export function CallStatisticsEditor() {
   const [activeTab, setActiveTab] = useState<'current' | 'yearly'>('current');
   const [monthlyStats, setMonthlyStats] = useState<MonthlyCallStat[]>([]);
-  const [editedMonthlyStats, setEditedMonthlyStats] = useState<MonthlyCallStat[]>([]);
   const [yearlyStats, setYearlyStats] = useState<YearlyCallStat[]>([]);
+  const [editedMonthlyStats, setEditedMonthlyStats] = useState<MonthlyCallStat[]>([]);
   const [editedYearlyStats, setEditedYearlyStats] = useState<YearlyCallStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStats();
@@ -33,7 +36,9 @@ export function CallStatisticsEditor() {
 
   async function fetchStats() {
     try {
-      // Fetch monthly stats
+      setLoading(true);
+
+      // Fetch monthly stats for current year
       const { data: monthlyData, error: monthlyError } = await getSupabaseClient(true)
         .from('monthly_call_stats')
         .select('*')
@@ -41,126 +46,169 @@ export function CallStatisticsEditor() {
         .order('month');
 
       if (monthlyError) throw monthlyError;
-      setMonthlyStats(monthlyData || []);
-      setEditedMonthlyStats(monthlyData || []);
+      
+      // Create monthly stats for each month if they don't exist
+      const allMonths: MonthlyCallStat[] = [];
+      for (let month = 1; month <= 12; month++) {
+        const existingStat = monthlyData?.find(s => s.month === month);
+        if (existingStat) {
+          allMonths.push(existingStat);
+        } else {
+          allMonths.push({
+            id: `temp-${month}`,
+            year: currentYear,
+            month,
+            fires: 0,
+            medical: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+      }
+
+      setMonthlyStats(allMonths);
+      setEditedMonthlyStats(allMonths);
 
       // Fetch yearly stats
       const { data: yearlyData, error: yearlyError } = await getSupabaseClient(true)
         .from('yearly_call_stats')
         .select('*')
-        .gte('year', currentYear - 9)
         .order('year', { ascending: false });
 
       if (yearlyError) throw yearlyError;
-      setYearlyStats(yearlyData || []);
-      setEditedYearlyStats(yearlyData || []);
+      
+      // Add current year if it doesn't exist
+      let yearlyWithCurrent = yearlyData || [];
+      if (!yearlyWithCurrent.some(s => s.year === currentYear - 1)) {
+        const newYear: YearlyCallStat = {
+          id: `temp-${currentYear - 1}`,
+          year: currentYear - 1,
+          total_calls: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        yearlyWithCurrent = [newYear, ...yearlyWithCurrent];
+      }
+
+      setYearlyStats(yearlyWithCurrent);
+      setEditedYearlyStats(yearlyWithCurrent);
     } catch (err) {
       console.error('Error fetching call statistics:', err);
+      setError('Failed to load statistics');
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleMonthlyStatChange(month: number, values: { fires: number; medical: number }) {
-    const updatedStats = editedMonthlyStats.map(stat => {
-      if (stat.month === month) {
-        return { ...stat, ...values };
-      }
-      return stat;
-    });
+  const handleMonthlyStatChange = (month: number, values: { fires: number, medical: number }) => {
+    setEditedMonthlyStats(prev => 
+      prev.map(stat => 
+        stat.month === month 
+          ? { ...stat, fires: values.fires, medical: values.medical } 
+          : stat
+      )
+    );
+  };
 
-    // If stat doesn't exist, add it
-    if (!updatedStats.find(s => s.month === month)) {
-      updatedStats.push({
-        id: `temp-${month}`,
-        year: currentYear,
-        month,
-        ...values,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+  const handleYearlyStatChange = (year: number, totalCalls: number) => {
+    setEditedYearlyStats(prev => 
+      prev.map(stat => 
+        stat.year === year 
+          ? { ...stat, total_calls: totalCalls } 
+          : stat
+      )
+    );
+  };
+
+  const addYearStat = () => {
+    const years = editedYearlyStats.map(s => s.year);
+    let minYear = Math.min(...years);
+    minYear = minYear > 1960 ? minYear - 1 : minYear;
+    
+    const newStat: YearlyCallStat = {
+      id: `new-${Date.now()}`,
+      year: minYear,
+      total_calls: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    setEditedYearlyStats([...editedYearlyStats, newStat]);
+  };
+
+  const removeYearStat = (id: string) => {
+    setEditedYearlyStats(prev => prev.filter(s => s.id !== id));
+  };
+
+  const saveChanges = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccess(null);
+
+      // Save monthly stats
+      const monthlyPromises = editedMonthlyStats.map(async stat => {
+        if (stat.id.startsWith('temp-')) {
+          // Create new stat
+          return getSupabaseClient(true)
+            .from('monthly_call_stats')
+            .insert({
+              year: stat.year,
+              month: stat.month,
+              fires: stat.fires,
+              medical: stat.medical
+            });
+        } else {
+          // Update existing stat
+          return getSupabaseClient(true)
+            .from('monthly_call_stats')
+            .update({
+              fires: stat.fires,
+              medical: stat.medical
+            })
+            .eq('id', stat.id);
+        }
       });
-    }
 
-    setEditedMonthlyStats(updatedStats);
-  }
+      // Save yearly stats
+      const yearlyPromises = editedYearlyStats.map(async stat => {
+        if (stat.id.startsWith('temp-') || stat.id.startsWith('new-')) {
+          // Create new stat
+          return getSupabaseClient(true)
+            .from('yearly_call_stats')
+            .insert({
+              year: stat.year,
+              total_calls: stat.total_calls
+            });
+        } else {
+          // Update existing stat
+          return getSupabaseClient(true)
+            .from('yearly_call_stats')
+            .update({
+              year: stat.year,
+              total_calls: stat.total_calls
+            })
+            .eq('id', stat.id);
+        }
+      });
 
-  async function handleYearlyStatChange(year: number, total_calls: number) {
-    const updatedStats = editedYearlyStats.map(stat => {
-      if (stat.year === year) {
-        return { ...stat, total_calls };
-      }
-      return stat;
-    });
-
-    setEditedYearlyStats(updatedStats);
-  }
-
-  async function saveMonthlyStats() {
-    setSaving(true);
-    try {
-      // Prepare upsert data
-      const upsertData = editedMonthlyStats.map(({ id, created_at, updated_at, ...rest }) => ({
-        ...rest
-      }));
-
-      const { error } = await getSupabaseClient(true)
-        .from('monthly_call_stats')
-        .upsert(upsertData, {
-          onConflict: 'year,month'
-        });
-
-      if (error) throw error;
+      // Wait for all requests to complete
+      await Promise.all([...monthlyPromises, ...yearlyPromises]);
+      
+      // Refresh data
       await fetchStats();
+      setSuccess('Changes saved successfully');
     } catch (err) {
-      console.error('Error saving monthly statistics:', err);
-      alert('Failed to save changes. Please try again.');
+      console.error('Error saving statistics:', err);
+      setError('Failed to save changes');
     } finally {
       setSaving(false);
     }
-  }
-
-  async function saveYearlyStats() {
-    setSaving(true);
-    try {
-      const upsertData = editedYearlyStats.map(({ id, created_at, updated_at, ...rest }) => ({
-        ...rest
-      }));
-
-      const { error } = await getSupabaseClient(true)
-        .from('yearly_call_stats')
-        .upsert(upsertData, {
-          onConflict: 'year'
-        });
-
-      if (error) throw error;
-      await fetchStats();
-    } catch (err) {
-      console.error('Error saving yearly statistics:', err);
-      alert('Failed to save changes. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function hasMonthlyChanges() {
-    return JSON.stringify(monthlyStats) !== JSON.stringify(editedMonthlyStats);
-  }
-
-  function hasYearlyChanges() {
-    return JSON.stringify(yearlyStats) !== JSON.stringify(editedYearlyStats);
-  }
-
-  function discardChanges() {
-    if (activeTab === 'current') {
-      setEditedMonthlyStats(monthlyStats);
-    } else {
-      setEditedYearlyStats(yearlyStats);
-    }
-  }
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center">
+      <div className="flex justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     );
@@ -168,62 +216,61 @@ export function CallStatisticsEditor() {
 
   return (
     <div>
-      {/* Tabs and Actions */}
-      <div className="border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <nav className="-mb-px flex space-x-8">
+      <div className="flex justify-between mb-6">
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setActiveTab('current')}
+            className={`px-4 py-2 rounded-lg transition ${
+              activeTab === 'current'
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Current Year
+          </button>
+          <button
+            onClick={() => setActiveTab('yearly')}
+            className={`px-4 py-2 rounded-lg transition ${
+              activeTab === 'yearly'
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Historical Data
+          </button>
+        </div>
+        
+        <div className="flex space-x-2">
+          {activeTab === 'yearly' && (
             <button
-              onClick={() => setActiveTab('current')}
-              className={`${
-                activeTab === 'current'
-                  ? 'border-red-500 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } flex items-center whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              onClick={addYearStat}
+              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg flex items-center hover:bg-gray-200 transition"
             >
-              <Calendar className="w-5 h-5 mr-2" />
-              Current Year
+              <Plus className="w-4 h-4 mr-1" /> Add Year
             </button>
-            <button
-              onClick={() => setActiveTab('yearly')}
-              className={`${
-                activeTab === 'yearly'
-                  ? 'border-red-500 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } flex items-center whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-            >
-              <BarChart2 className="w-5 h-5 mr-2" />
-              Year over Year
-            </button>
-          </nav>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={discardChanges}
-              disabled={saving || (activeTab === 'current' ? !hasMonthlyChanges() : !hasYearlyChanges())}
-              className={`flex items-center px-4 py-2 rounded-lg transition ${
-                saving || (activeTab === 'current' ? !hasMonthlyChanges() : !hasYearlyChanges())
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-600 hover:text-red-600'
-              }`}
-            >
-              Discard Changes
-            </button>
-            <button
-              onClick={() => activeTab === 'current' ? saveMonthlyStats() : saveYearlyStats()}
-              disabled={saving || (activeTab === 'current' ? !hasMonthlyChanges() : !hasYearlyChanges())}
-              className={`flex items-center px-4 py-2 rounded-lg transition ${
-                saving || (activeTab === 'current' ? !hasMonthlyChanges() : !hasYearlyChanges())
-                  ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-red-600 hover:bg-red-700 text-white'
-              }`}
-            >
-              <Save className="w-5 h-5 mr-2" />
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
+          )}
+          <button
+            onClick={saveChanges}
+            disabled={saving}
+            className="px-3 py-2 bg-green-600 text-white rounded-lg flex items-center hover:bg-green-700 transition disabled:opacity-50"
+          >
+            <Save className="w-4 h-4 mr-1" /> {saving ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
       </div>
 
-      {/* Tab Content */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700">
+          {success}
+        </div>
+      )}
+
       <div className="mt-6">
         {activeTab === 'current' ? (
           <div className="space-y-6">
@@ -239,7 +286,7 @@ export function CallStatisticsEditor() {
                 return (
                   <div key={month} className="space-y-2">
                     <div className="text-base font-medium text-gray-900">
-                      {new Date(2024, month - 1).toLocaleString('default', { month: 'long' })}
+                      {formatDateForDisplay(new Date(2024, month - 1, 1))}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -295,7 +342,7 @@ export function CallStatisticsEditor() {
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white text-center">
                   {editedYearlyStats.map(stat => (
-                    <tr key={stat.year}>
+                    <tr key={stat.id}>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
                         <input
                           type="number"

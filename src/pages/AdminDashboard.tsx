@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { SiteUser } from '../types/database';
+import { formatDateForDisplay } from '../utils';
 
 export function AdminDashboard() {
   const [users, setUsers] = useState<SiteUser[]>([]);
@@ -182,7 +183,7 @@ export function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(user.created_at).toLocaleDateString()}
+                        {formatDateForDisplay(user.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <select

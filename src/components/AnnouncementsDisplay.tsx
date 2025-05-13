@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Calendar } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { formatDateForDisplay } from '../utils';
 
 interface Announcement {
   id: string;
@@ -79,7 +80,7 @@ export function AnnouncementsDisplay() {
         <div key={announcement.id} className="border-b border-gray-200 last:border-0 pb-4 last:pb-0">
           <div className="flex items-center text-sm text-gray-500 mb-2">
             <Calendar className="w-4 h-4 mr-2" />
-            {new Date(announcement.created_at).toLocaleDateString()} by {announcement.user_email.split('@')[0]}
+            {formatDateForDisplay(announcement.created_at)} by {announcement.user_email.split('@')[0]}
           </div>
           <h3 className="text-xl font-semibold mb-2">{announcement.title}</h3>
           <div 

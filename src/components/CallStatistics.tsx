@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, getSupabaseClient } from '../lib/supabase';
 import { MonthlyCallStat, YearlyCallStat } from '../types/database';
 import { Activity, Flame, Heart, ChevronRight, ChevronLeft } from 'lucide-react';
+import { formatDateForDisplay } from '../utils';
 
 export function CallStatistics() {
   const [monthlyStats, setMonthlyStats] = useState<MonthlyCallStat[]>([]);

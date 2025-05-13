@@ -3,13 +3,16 @@ import { supabase } from '../lib/supabase';
 import { Calendar, Plus, Trash2 } from 'lucide-react';
 import { Modal } from './Modal';
 import { SignUpConfirmation } from './SignUpConfirmation';
-import { format } from 'date-fns';
-import { parseISO } from 'date-fns/parseISO';
-import { formatInTimeZone, toDate } from 'date-fns-tz';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { createCalendarEvent, deleteCalendarEvent } from '../services/googleCalendar';
 import { deleteEvent, createEvent } from '../services/bookingService';
+import { 
+  formatDateForDisplay, 
+  formatTimeForDisplay, 
+  formatDateTimeForDisplay,
+  DEFAULT_TIMEZONE
+} from '../utils/dateUtils';
 
 // Constants
 const TIMEZONE = 'America/New_York';
@@ -357,21 +360,15 @@ function SignUpSheetCard({ sheet, onUpdate, isPast }: { sheet: SignUpSheet; onUp
   }, [sheet.groups, refreshKey]);
 
   const formatDateTime = (isoString: string) => {
-    try {
-      return formatInTimeZone(parseISO(isoString), TIMEZONE, 'MMM d, yyyy h:mm a');
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid Date';
-    }
+    return formatDateTimeForDisplay(isoString);
   };
 
   const formatDate = (isoString: string) => {
-    try {
-      return formatInTimeZone(parseISO(isoString), TIMEZONE, 'MMM d, yyyy');
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid Date';
-    }
+    return formatDateForDisplay(isoString);
+  };
+
+  const formatTime = (isoString: string) => {
+    return formatTimeForDisplay(isoString);
   };
 
   const handleSignUpSuccess = async () => {
@@ -406,7 +403,7 @@ function SignUpSheetCard({ sheet, onUpdate, isPast }: { sheet: SignUpSheet; onUp
               )}
             </div>
             <p className="text-sm text-gray-600">
-              {formatDateTime(sheet.event_date)} - {formatInTimeZone(parseISO(sheet.end_time), TIMEZONE, 'h:mm a')}
+              {formatDateTime(sheet.event_date)} - {formatTime(sheet.end_time)}
             </p>
             <p className="text-sm text-gray-600">
               Sign up by: {formatDate(sheet.sign_up_by)}
@@ -528,6 +525,8 @@ function SignUpSheetForm({ onSubmit }: { onSubmit: () => void }) {
   const { user } = useAuth();
   const [members, setMembers] = useState<SiteUser[]>([]);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     title: '',
     status: 'Online',
@@ -613,41 +612,31 @@ function SignUpSheetForm({ onSubmit }: { onSubmit: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
     try {
       if (!user?.id) {
         throw new Error('No user found');
       }
 
+      // Validate inputs
+      if (!formData.title) {
+        throw new Error('Title is required');
+      }
+
+      // Convert local dates to UTC while preserving the intended time
+      const eventDate = new Date(`${formData.eventDate}T${formData.startTime}`);
+      
+      const endDate = new Date(`${formData.eventDate}T${formData.endTime}`);
+
+      // For sign up by date, set it to midnight (00:00) of the selected date
+      const signUpByDate = new Date(`${formData.signUpBy}T00:00:00.000`);
+
       // Validate announcement expiry date if creating announcement
       if (createAnnouncement && !announcementExpiryDate) {
         throw new Error('Please select an expiration date for the announcement');
       }
-
-      // Get the site_user record using the auth ID
-      const { data: siteUser, error: userError } = await supabase
-        .from('site_users')
-        .select('id')
-        .eq('authid', user.id)
-        .single();
-
-      if (userError) throw userError;
-
-      // Convert local dates to UTC while preserving the intended time in ET
-      const eventDate = toDate(
-        `${formData.eventDate}T${formData.startTime}`,
-        { timeZone: TIMEZONE }
-      );
-      
-      const endDate = toDate(
-        `${formData.eventDate}T${formData.endTime}`,
-        { timeZone: TIMEZONE }
-      );
-
-      // For sign up by date, set it to midnight (00:00) of the selected date in ET
-      const signUpByDate = toDate(
-        `${formData.signUpBy}T00:00:00.000`,
-        { timeZone: TIMEZONE }
-      );
 
       // Validate dates
       if (isNaN(eventDate.getTime()) || isNaN(endDate.getTime()) || isNaN(signUpByDate.getTime())) {
@@ -717,8 +706,8 @@ function SignUpSheetForm({ onSubmit }: { onSubmit: () => void }) {
       
       // If user opted to create an announcement, create it now
       if (createAnnouncement) {
-        const formattedDate = formatInTimeZone(eventDate, TIMEZONE, 'MMM d, yyyy h:mm a');
-        const formattedEndTime = formatInTimeZone(endDate, TIMEZONE, 'h:mm a');
+        const formattedDate = formatDateTimeForDisplay(eventDate);
+        const formattedEndTime = formatTimeForDisplay(endDate);
         const locationText = locationName ? ` at ${locationName}` : '';
         
         // Create HTML content for better formatting
@@ -726,7 +715,7 @@ function SignUpSheetForm({ onSubmit }: { onSubmit: () => void }) {
           `<p><strong>A new sign-up sheet has been created!</strong></p>` +
           `<p><strong>Event:</strong> ${formData.title}</p>` +
           `<p><strong>Date:</strong> ${formattedDate} - ${formattedEndTime}${locationText}</p>` +
-          `<p><strong>Sign up by:</strong> ${formatInTimeZone(signUpByDate, TIMEZONE, 'MMM d, yyyy')}</p>` +
+          `<p><strong>Sign up by:</strong> ${formatDateForDisplay(signUpByDate)}</p>` +
           (formData.memo ? `<p><strong>Additional information:</strong> ${formData.memo}</p>` : '') + 
           `<p class="mt-4"><a href="#signup-sheets" onclick="document.getElementById('signup-sheets').scrollIntoView({behavior: 'smooth'}); return false;" 
            style="display: inline-block; padding: 8px 16px; background-color: #3490dc; color: white; text-decoration: none; border-radius: 4px;">

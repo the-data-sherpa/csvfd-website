@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { formatInTimeZone } from 'date-fns-tz';
-import { parseISO } from 'date-fns/parseISO';
-
-const TIMEZONE = 'America/New_York';
+import { formatDateTimeForDisplay, formatDateForDisplay, DEFAULT_TIMEZONE } from '../utils';
 
 interface Position {
   name: string;
@@ -231,7 +228,7 @@ export function SignUpConfirmation({ sheet, onClose, onConfirm }: SignUpConfirma
         <h3 className="text-lg font-medium">Sign Up Details</h3>
         <div className="mt-2">
           <p><span className="font-medium">Title:</span> {sheet.title}</p>
-          <p><span className="font-medium">Closing Date:</span> {formatInTimeZone(parseISO(sheet.signUpBy), TIMEZONE, 'MMM d, yyyy')}</p>
+          <p><span className="font-medium">Closing Date:</span> {formatDateTimeForDisplay(sheet.signUpBy)}</p>
         </div>
       </div>
 

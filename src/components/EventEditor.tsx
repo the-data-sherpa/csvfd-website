@@ -15,6 +15,7 @@ import { createEvent, updateEvent, deleteEvent, fetchLocations } from '../servic
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
+import { formatDateTime, formatDateForDisplay, formatTimeForDisplay, combineDateAndTime, getCurrentDateTime } from '../utils';
 
 interface EventEditorProps {
   event?: Event | null;
@@ -29,8 +30,8 @@ interface EventEditorProps {
 const defaultFormData: EventFormData = {
   title: '',
   description: '',
-  start_time: new Date().toISOString(),
-  end_time: addHours(new Date(), 1).toISOString(),
+  start_time: getCurrentDateTime().toISOString(),
+  end_time: addHours(getCurrentDateTime(), 1).toISOString(),
   location_id: '',
   is_public: true
 };
@@ -51,6 +52,83 @@ export function EventEditor({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const { user, role, siteUser } = useAuth();
+
+  // Function implementations to fix linter errors
+  // Generate time options for the time dropdowns in 30-minute increments
+  const generateTimeOptions = (startTime?: string): string[] => {
+    const options: string[] = [];
+    const start = startTime ? parseInt(startTime.split(':')[0], 10) : 0;
+    
+    for (let hour = start; hour < 24; hour++) {
+      options.push(`${hour.toString().padStart(2, '0')}:00`);
+      options.push(`${hour.toString().padStart(2, '0')}:30`);
+    }
+    
+    return options;
+  };
+  
+  // Format time option for display in the dropdown
+  const formatTimeOption = (time: string): string => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+  
+  // Handle date change from Calendar component
+  const handleDateChange = (date: Date): void => {
+    const newStartDate = new Date(date);
+    const newEndDate = addHours(new Date(date), 1);
+    
+    setFormData((prev) => ({
+      ...prev,
+      start_time: newStartDate.toISOString(),
+      end_time: newEndDate.toISOString()
+    }));
+  };
+  
+  // Handle start time change
+  const handleStartTimeChange = (value: string): void => {
+    try {
+      // Get the date part from the current start_time
+      const currentDate = new Date(formData.start_time);
+      
+      // Create a new date with the selected time
+      const [hours, minutes] = value.split(':').map(Number);
+      currentDate.setHours(hours, minutes);
+      
+      // Calculate new end time (1 hour after start)
+      const newEndDate = addHours(new Date(currentDate), 1);
+      
+      setFormData((prev) => ({
+        ...prev,
+        start_time: currentDate.toISOString(),
+        end_time: newEndDate.toISOString()
+      }));
+    } catch (error) {
+      console.error('Error setting start time:', error);
+    }
+  };
+  
+  // Handle end time change
+  const handleEndTimeChange = (value: string): void => {
+    try {
+      // Get the date part from the current end_time
+      const currentDate = new Date(formData.end_time);
+      
+      // Create a new date with the selected time
+      const [hours, minutes] = value.split(':').map(Number);
+      currentDate.setHours(hours, minutes);
+      
+      setFormData((prev) => ({
+        ...prev,
+        end_time: currentDate.toISOString()
+      }));
+    } catch (error) {
+      console.error('Error setting end time:', error);
+    }
+  };
 
   // Fetch locations when component mounts
   useEffect(() => {
@@ -77,11 +155,7 @@ export function EventEditor({
   // Helper function to safely format dates
   const safeFormat = (dateString: string, formatString: string): string => {
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return '';
-      }
-      return format(date, formatString);
+      return formatDateTime(dateString, formatString);
     } catch (error) {
       console.error('Error formatting date:', error);
       return '';
@@ -305,121 +379,72 @@ export function EventEditor({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Start Date</Label>
-                  <div className="flex gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {safeFormat(formData.start_time, 'PPP')}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={new Date(formData.start_time)}
-                          onSelect={(date) => {
-                            if (date) {
-                              const currentStart = new Date(formData.start_time);
-                              const newDate = new Date(date);
-                              newDate.setHours(currentStart.getHours());
-                              newDate.setMinutes(currentStart.getMinutes());
-                              setFormData((prev) => ({
-                                ...prev,
-                                start_time: newDate.toISOString()
-                              }));
-                            }
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="startTime">Start Time</Label>
-                  <Input
-                    id="startTime"
-                    name="startTime"
-                    type="time"
-                    value={safeFormat(formData.start_time, 'HH:mm')}
-                    onChange={(e) => {
-                      const [hours, minutes] = e.target.value.split(':').map(Number);
-                      const newDate = new Date(formData.start_time);
-                      newDate.setHours(hours);
-                      newDate.setMinutes(minutes);
-                      setFormData((prev) => ({
-                        ...prev,
-                        start_time: newDate.toISOString()
-                      }));
-                    }}
-                    required
-                  />
-                </div>
+              <div className="grid gap-2">
+                <Label htmlFor="date">Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.start_time && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.start_time ? (
+                        formatDateForDisplay(formData.start_time)
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={new Date(formData.start_time)}
+                      onSelect={date => handleDateChange(date || new Date())}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>End Date</Label>
-                  <div className="flex gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {safeFormat(formData.end_time, 'PPP')}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={new Date(formData.end_time)}
-                          onSelect={(date) => {
-                            if (date) {
-                              const currentEnd = new Date(formData.end_time);
-                              const newDate = new Date(date);
-                              newDate.setHours(currentEnd.getHours());
-                              newDate.setMinutes(currentEnd.getMinutes());
-                              setFormData((prev) => ({
-                                ...prev,
-                                end_time: newDate.toISOString()
-                              }));
-                            }
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Select
+                    value={safeFormat(formData.start_time, "HH:mm")}
+                    onValueChange={value => handleStartTimeChange(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select start time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateTimeOptions().map(time => (
+                        <SelectItem key={time} value={time}>
+                          {formatTimeOption(time)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
-                <div className="space-y-2">
+                <div className="grid gap-2">
                   <Label htmlFor="endTime">End Time</Label>
-                  <Input
-                    id="endTime"
-                    name="endTime"
-                    type="time"
-                    value={safeFormat(formData.end_time, 'HH:mm')}
-                    onChange={(e) => {
-                      const [hours, minutes] = e.target.value.split(':').map(Number);
-                      const newDate = new Date(formData.end_time);
-                      newDate.setHours(hours);
-                      newDate.setMinutes(minutes);
-                      setFormData((prev) => ({
-                        ...prev,
-                        end_time: newDate.toISOString()
-                      }));
-                    }}
-                    required
-                  />
+                  <Select
+                    value={safeFormat(formData.end_time, "HH:mm")}
+                    onValueChange={value => handleEndTimeChange(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select end time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateTimeOptions(safeFormat(formData.start_time, "HH:mm")).map(time => (
+                        <SelectItem key={time} value={time}>
+                          {formatTimeOption(time)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

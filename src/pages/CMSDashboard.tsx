@@ -5,6 +5,7 @@ import { Page, PageSection } from '../types/database';
 import { FileText, Edit2, Trash2, Plus, ChevronRight, BarChart, Megaphone } from 'lucide-react';
 import { CallStatisticsEditor } from '../components/CallStatisticsEditor';
 import { AnnouncementsEditor } from '../components/AnnouncementsEditor';
+import { formatDateTimeForDisplay, formatDateForDisplay } from '../utils';
 
 const SECTION_TITLES: Record<PageSection, string> = {
   'our-department': 'Our Department',
@@ -192,13 +193,7 @@ export function CMSDashboard() {
                 <h4 className="text-sm text-gray-500 uppercase">Last Updated</h4>
                 <p className="text-2xl font-semibold mt-2">
                   {stats.lastUpdated
-                    ? new Date(stats.lastUpdated).toLocaleString('en-US', {
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        hour12: true,
-                        month: 'short',
-                        day: 'numeric'
-                      })
+                    ? formatDateTimeForDisplay(stats.lastUpdated)
                     : 'Never'}
                 </p>
               </div>
@@ -317,7 +312,7 @@ export function CMSDashboard() {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 text-gray-500">
-                                  {new Date(page.updated_at).toLocaleDateString()}
+                                  {formatDateForDisplay(page.updated_at)}
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                   <button

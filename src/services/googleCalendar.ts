@@ -1,4 +1,5 @@
 import * as jose from 'jose';
+import { formatToRFC3339, parseApiDate } from '../utils/dateUtils';
 
 export const CALENDAR_ID = 'c_09e207f03a766a994be1825708facc96af8fa61e17ae808977859925ce1c3fa6@group.calendar.google.com';
 
@@ -94,12 +95,6 @@ export async function createCalendarEvent(event: CalendarEvent) {
     const accessToken = await getAccessToken();
     console.log('Got access token:', accessToken);
 
-    // Format dates to RFC3339
-    const formatToRFC3339 = (dateStr: string) => {
-      const date = new Date(dateStr);
-      return date.toISOString();
-    };
-
     const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${CALENDAR_ID}/events`, {
       method: 'POST',
       headers: {
@@ -180,11 +175,6 @@ export async function updateCalendarEvent(eventId: string, event: CalendarEvent)
   try {
     const accessToken = await getAccessToken();
     
-    const formatToRFC3339 = (dateStr: string) => {
-      const date = new Date(dateStr);
-      return date.toISOString();
-    };
-
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${CALENDAR_ID}/events/${eventId}`,
       {

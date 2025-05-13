@@ -3,6 +3,13 @@ import { Event, EventFormData, Location, CalendarEventDisplay } from '../types/b
 import { format } from 'date-fns';
 import { parseISO } from 'date-fns/parseISO';
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from './googleCalendar';
+import { 
+  formatDateForDisplay, 
+  formatTimeForDisplay, 
+  formatDateTimeForDisplay,
+  formatToRFC3339,
+  DEFAULT_TIMEZONE
+} from '../utils/dateUtils';
 
 interface EventWithDetails extends Omit<Event, 'created_by_user' | 'location'> {
   email: string;
@@ -255,96 +262,82 @@ export const fetchLocations = async (): Promise<Location[]> => {
   return data || [];
 };
 
-// Helper function to format date for iCal
+// Replace the formatDateForICal function with our utility
 const formatDateForICal = (date: Date): string => {
-  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  // ICal format is a bit different, so we need a custom function
+  // Use the date string without dashes or colons
+  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/g, '');
 };
 
-// Helper function to escape text for iCal
 const escapeICalText = (text: string): string => {
   return text
-    .replace(/[\\;,]/g, (match) => '\\' + match)
-    .replace(/\n/g, '\\n');
+    .replace(/[\\;,]/g, '\\$&')
+    .replace(/\r\n|\r|\n/g, '\\n');
 };
 
 export const exportEventsToICal = (events: Event[]): void => {
-  // Start building iCal content
-  let icalContent = [
+  const icalContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Cool Spring VFD//Events Calendar//EN',
+    'PRODID:-//CSVFD//Calendar//EN',
     'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    'X-WR-CALNAME:Cool Spring VFD Events',
-    'X-WR-TIMEZONE:America/New_York'
+    'METHOD:PUBLISH'
   ];
 
-  // Add each event
   events.forEach(event => {
     const startDate = new Date(event.start_time);
     const endDate = new Date(event.end_time);
+    const locationName = event.location?.name || '';
     
-    // Create event lines, excluding optional fields if they're empty
-    const eventLines = [
+    icalContent.push(
       'BEGIN:VEVENT',
-      `UID:${event.id}@coolspringsvfd.org`,
-      `DTSTAMP:${formatDateForICal(new Date())}`,
-      `DTSTART:${formatDateForICal(startDate)}`,
-      `DTEND:${formatDateForICal(endDate)}`,
-      `SUMMARY:${escapeICalText(event.title)}`
-    ];
-
-    // Add optional fields if they exist
-    if (event.description) {
-      eventLines.push(`DESCRIPTION:${escapeICalText(event.description)}`);
-    }
-    if (event.location?.name) {
-      eventLines.push(`LOCATION:${escapeICalText(event.location.name)}`);
-    }
-    
-    eventLines.push(
-      `ORGANIZER;CN=Cool Spring VFD:mailto:${event.created_by_user?.email || 'no-reply@coolspringsvfd.org'}`,
+      `UID:${event.id}@csvfd`,
+      `DTSTAMP:${formatDateForICal(new Date())}Z`,
+      `DTSTART:${formatDateForICal(startDate)}Z`,
+      `DTEND:${formatDateForICal(endDate)}Z`,
+      `SUMMARY:${escapeICalText(event.title)}`,
+      `DESCRIPTION:${escapeICalText(event.description || '')}`,
+      `LOCATION:${escapeICalText(locationName)}`,
       'END:VEVENT'
     );
-
-    // Add all event lines to the calendar content
-    icalContent = icalContent.concat(eventLines);
   });
 
-  // Close the calendar
   icalContent.push('END:VCALENDAR');
-
-  // Join with CRLF as required by iCal spec
-  const fileContent = icalContent.join('\r\n');
-
-  // Create and download the file
-  const blob = new Blob([fileContent], { type: 'text/calendar;charset=utf-8' });
-  const link = document.createElement('a');
-  link.href = window.URL.createObjectURL(blob);
-  link.download = 'cool-spring-events.ics';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(link.href);
+  
+  const blob = new Blob([icalContent.join('\r\n')], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'csvfd-events.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 };
 
 export const generateGoogleCalendarUrl = (events: Event[]): string => {
-  if (events.length === 0) {
-    throw new Error('No events to add to Google Calendar');
+  if (events.length === 0) return '';
+  
+  // For multiple events, just open Google Calendar in a new tab
+  if (events.length > 1) {
+    return 'https://calendar.google.com/calendar/';
   }
-
+  
+  // For a single event, generate a Google Calendar event URL
   const event = events[0];
+  const title = encodeURIComponent(event.title);
+  const description = encodeURIComponent(event.description || '');
+  const location = encodeURIComponent(event.location?.name || '');
   
-  const base = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
-  const title = `&text=${encodeURIComponent(event.title)}`;
-  const dates = `&dates=${formatDateForGoogle(event.start_time)}/${formatDateForGoogle(event.end_time)}`;
-  const details = event.description ? `&details=${encodeURIComponent(event.description)}` : '';
-  const location = event.location?.name ? `&location=${encodeURIComponent(event.location.name)}` : '';
+  // Format for Google Calendar URL
+  const start = formatDateForGoogle(event.start_time);
+  const end = formatDateForGoogle(event.end_time);
   
-  return `${base}${title}${dates}${details}${location}`;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${description}&location=${location}&dates=${start}/${end}`;
 };
 
+// Google Calendar requires a specific format without punctuation
 const formatDateForGoogle = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  return date.toISOString().replace(/-|:|\.\d+/g, '');
+  return formatDateForICal(new Date(dateStr));
 }; 

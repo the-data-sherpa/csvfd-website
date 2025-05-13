@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Edit2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatDateForDisplay } from '../utils';
 
 interface Announcement {
   id: string;
@@ -118,7 +119,9 @@ export function AnnouncementsEditor() {
                   )}
                 </td>
                 <td className="px-6 py-4 text-gray-500">
-                  {new Date(announcement.created_at).toLocaleDateString()}
+                  <div className="text-gray-500 text-sm">
+                    {formatDateForDisplay(announcement.created_at)}
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <button
