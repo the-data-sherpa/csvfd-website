@@ -4,6 +4,7 @@ import { supabase, getSupabaseClient } from '../lib/supabase';
 import { MonthlyCallStat, YearlyCallStat } from '../types/database';
 import { Activity, Flame, Heart, ChevronRight, ChevronLeft } from 'lucide-react';
 import { formatDateForDisplay } from '../utils';
+import { Loading, Skeleton } from './ui/Loading';
 
 export function CallStatistics() {
   const [monthlyStats, setMonthlyStats] = useState<MonthlyCallStat[]>([]);
@@ -81,8 +82,31 @@ export function CallStatistics() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      <div className="p-6 bg-white rounded-lg shadow">
+        <div className="flex justify-between items-center mb-6">
+          <Skeleton className="h-8 w-32" />
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <Skeleton className="h-6 w-24 mb-2" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <Skeleton className="h-6 w-24 mb-2" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <Skeleton className="h-6 w-24 mb-2" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+        <div className="h-64 bg-gray-50 rounded-lg">
+          <Loading type="spinner" className="h-full" />
+        </div>
       </div>
     );
   }

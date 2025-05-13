@@ -4,6 +4,7 @@ import { ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { SiteUser } from '../types/database';
 import { formatDateForDisplay } from '../utils';
+import { Loading, Skeleton } from '../components/ui/Loading';
 
 export function AdminDashboard() {
   const [users, setUsers] = useState<SiteUser[]>([]);
@@ -71,6 +72,37 @@ export function AdminDashboard() {
     } finally {
       setUpdating(null);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+        
+        <div className="space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="border-b border-gray-200 pb-4 last:border-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div>
+                    <Skeleton className="h-6 w-32 mb-2" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -150,15 +182,7 @@ export function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-4 text-center">
-                      <div className="flex justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : users.length === 0 ? (
+                {users.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
                       No users found
@@ -212,6 +236,14 @@ export function AdminDashboard() {
           </div>
         </div>
       </div>
+      {updating && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+            <Loading type="spinner" className="mb-4" />
+            <p className="text-center text-gray-600">Updating user role...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
